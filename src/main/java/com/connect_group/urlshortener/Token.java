@@ -2,6 +2,10 @@ package com.connect_group.urlshortener;
 
 import com.connect_group.urlshortener.util.StringHelper;
 
+/**
+ * Simple state object which contains both a token, and
+ * an indication of whether to display the expanded URL or redirect.
+ */
 public class Token {
 
     private final String token;
@@ -36,6 +40,10 @@ public class Token {
 
     public String getTokenString() {
         return token;
+    }
+
+    public String toString() {
+        return (displayOnly?"display ":"redirect ") + token;
     }
 
 }

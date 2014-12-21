@@ -11,6 +11,24 @@ import java.io.PrintWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
 
+/**
+ * This servlet can both shorten and expand a URL.
+ *
+ * URL Parameters:
+ *  ?shorten=url
+ *  This will shorten a URL and return the shortened token in a plain text response.
+ *  If an error occurs (such as an invalid URL), a 400 error is returned.
+ *
+ *  ?shorten=url&callback=json
+ *  This will shorten a URL and return a JSONP response.
+ *  If an error occurs, the JSONP response will contain an explanation of the error.
+ *
+ * When no shorten parameter is supplied, the servlet will try to expand the URL.
+ * If the URL ends in a +, the expanded URL is returned in a plain text response.
+ * If the URL does not end in a +, a permenant redirect is sent.
+ * If a callback parameter is supplied, then a JSONP response is sent.
+ *
+ */
 @WebServlet(urlPatterns={"/"})
 public class ShortenerServlet extends HttpServlet {
 
@@ -19,11 +37,17 @@ public class ShortenerServlet extends HttpServlet {
     public final String SHORTEN_PARAM = "shorten";
     public final String CALLBACK_PARAM = "callback";
 
+    /**
+     * The default constructor which is used by the web container.
+     */
     public ShortenerServlet() {
         super();
         this.shortenerService = new ShortenerServiceImpl();
     }
 
+    /**
+     * Allows for dependancy injection of a ShortenerService to aid in testing.
+     */
     public ShortenerServlet(ShortenerService shortenerService) {
         super();
         this.shortenerService = shortenerService;
