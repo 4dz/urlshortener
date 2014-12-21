@@ -16,8 +16,10 @@ public class StubShortenerService implements ShortenerService {
 
     @Override
     public String expand(String token) throws UnrecognisedTokenException {
-        if("/valid".equals(token)) {
+        if("valid".equals(token)) {
             return "expanded_url";
+        } else if("return-null".equals(token)) {
+            return null;
         } else {
             throw new UnrecognisedTokenException("shortened token was not recognised");
         }

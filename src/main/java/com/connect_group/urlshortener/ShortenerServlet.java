@@ -46,6 +46,9 @@ public class ShortenerServlet extends HttpServlet {
             Token token = new Token(servletPath);
 
             String redirectUrl = shortenerService.expand(token.getTokenString());
+            if(redirectUrl==null) {
+                throw new UnrecognisedTokenException("Null expanded url");
+            }
 
             if(StringHelper.isNotEmpty(callback)) {
                 respondWithJsonP(resp, redirectUrl, callback);
@@ -55,13 +58,22 @@ public class ShortenerServlet extends HttpServlet {
                 permenantRedirect(resp, redirectUrl);
             }
         } catch (UnrecognisedTokenException e) {
-            resp.sendError(HttpServletResponse.SC_NOT_FOUND, e.getMessage());
+            if(StringHelper.isNotEmpty(callback)) {
+                respondWithJsonPError(resp, e.getMessage(), callback);
+            } else {
+                resp.sendError(HttpServletResponse.SC_NOT_FOUND, e.getMessage());
+            }
         }
+    }
+
+    private void respondWithJsonPError(HttpServletResponse resp, String message, String callback) throws IOException {
+        String jsonp = callback + "({\"error\": \""+message +"\"});";
+        respondWithJsonPMessage(resp, jsonp);
     }
 
     private void respondWithJsonP(HttpServletResponse resp, String redirectUrl, String callback) throws IOException {
         String jsonp = callback + "({\"url\": \""+redirectUrl +"\"});";
-        respondWithMessage(resp, jsonp);
+        respondWithJsonPMessage(resp, jsonp);
     }
 
     private void permenantRedirect(HttpServletResponse resp, String redirectUrl) {
@@ -79,11 +91,24 @@ public class ShortenerServlet extends HttpServlet {
                 respondWithMessage(resp, shortUrl);
             }
         } catch (MalformedURLException ex) {
-            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, ex.getMessage());
+            if(StringHelper.isNotEmpty(callback)) {
+                respondWithJsonPError(resp, ex.getMessage(), callback);
+            } else {
+                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, ex.getMessage());
+            }
         }
     }
 
+    private void respondWithJsonPMessage(HttpServletResponse resp, String msg) throws IOException {
+        respondWithMessage(resp, "application/javascript", msg);
+    }
+
     private void respondWithMessage(HttpServletResponse resp, String msg) throws IOException {
+        respondWithMessage(resp, "text/plain", msg);
+    }
+
+    private void respondWithMessage(HttpServletResponse resp, String contentType, String msg) throws IOException {
+        resp.setContentType(contentType);
         PrintWriter writer = resp.getWriter();
         writer.print(msg);
     }

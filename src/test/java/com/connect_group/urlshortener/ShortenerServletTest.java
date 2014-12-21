@@ -77,7 +77,7 @@ public class ShortenerServletTest {
 
     @Test
     public void shouldRedirectToExpectedPage_WhenShortTokenSupplied() throws ServletException, IOException {
-        given(mockRequest.getServletPath()).willReturn("/valid");
+        given(mockRequest.getServletPath()).willReturn("valid");
         servlet.doGet(mockRequest, mockResponse);
         verify(mockResponse).setStatus(HttpServletResponse.SC_MOVED_PERMANENTLY);
         verify(mockResponse).setHeader("Location", "expanded_url");
@@ -92,9 +92,16 @@ public class ShortenerServletTest {
 
     @Test
     public void shouldPrintExpandedUrl_WhenShortTokenRecognised_AndEndsWithPlus() throws ServletException, IOException {
+        given(mockRequest.getServletPath()).willReturn("valid+");
+        servlet.doGet(mockRequest, mockResponse);
+        assertThat(stringWriter.toString(), equalTo("expanded_url"));
+    }
+
+    @Test
+    public void shouldIgnoreLeadingSlash_WhenShortTokenSupplied() throws ServletException, IOException {
         given(mockRequest.getServletPath()).willReturn("/valid+");
         servlet.doGet(mockRequest, mockResponse);
-
+        assertThat(stringWriter.toString(), equalTo("expanded_url"));
     }
 
     @Test
@@ -113,4 +120,34 @@ public class ShortenerServletTest {
         assertThat(stringWriter.toString(), equalTo("myfunction({\"url\": \"1\"});"));
     }
 
+    @Test
+    public void shouldReturnErrorMessage_WhenNullExpandedUrlIsObtained() throws ServletException, IOException {
+        given(mockRequest.getServletPath()).willReturn("/return-null");
+        servlet.doGet(mockRequest, mockResponse);
+        verify(mockResponse).sendError(eq(404), anyString());
+    }
+
+    @Test
+    public void shouldReturnJsonPError_WhenUnknownShortTokenAndCallbackSpecified() throws ServletException, IOException {
+        given(mockRequest.getServletPath()).willReturn("/unknown");
+        given(mockRequest.getParameter("callback")).willReturn("myfunction");
+        servlet.doGet(mockRequest, mockResponse);
+        assertThat(stringWriter.toString(), equalTo("myfunction({\"error\": \"shortened token was not recognised\"});"));
+    }
+
+    @Test
+    public void shouldReturnJsonPError_WhenInvalidUrlAndCallbackSpecified() throws ServletException, IOException {
+        given(mockRequest.getParameter("shorten")).willReturn("htt://test/");
+        given(mockRequest.getParameter("callback")).willReturn("somefunction");
+        servlet.doGet(mockRequest, mockResponse);
+        assertThat(stringWriter.toString(), equalTo("somefunction({\"error\": \"unknown protocol: htt\"});"));
+    }
+
+    @Test
+    public void shouldSetJavascriptContentType_WhenJsonP() throws ServletException, IOException {
+        given(mockRequest.getParameter("shorten")).willReturn("htt://test/");
+        given(mockRequest.getParameter("callback")).willReturn("somefunction");
+        servlet.doGet(mockRequest, mockResponse);
+        verify(mockResponse).setContentType("application/javascript");
+    }
 }

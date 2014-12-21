@@ -8,17 +8,25 @@ public class Token {
     private final boolean displayOnly;
 
     public Token(String token) throws UnrecognisedTokenException {
+        boolean displayOnly = false;
+
+        if(token!=null) {
+            displayOnly = token.endsWith("+");
+
+            if (displayOnly) {
+                token = token.substring(0, token.length() - 1);
+            }
+
+            if (token.startsWith("/")) {
+                token = token.substring(1);
+            }
+        }
 
         if(StringHelper.isEmpty(token)) {
-            throw new UnrecognisedTokenException("No shorten parameter was supplied");
+            throw new UnrecognisedTokenException("No token was supplied");
         }
 
-        displayOnly = token.endsWith("+");
-
-        if(displayOnly) {
-            token = token.substring(0, token.length());
-        }
-
+        this.displayOnly = displayOnly;
         this.token = token;
     }
 
