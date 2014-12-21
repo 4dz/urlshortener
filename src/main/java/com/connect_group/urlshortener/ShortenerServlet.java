@@ -53,6 +53,10 @@ public class ShortenerServlet extends HttpServlet {
         this.shortenerService = shortenerService;
     }
 
+    public ShortenerService getShortenerService() {
+        return shortenerService;
+    }
+    
     @Override
     public void doGet(HttpServletRequest req, HttpServletResponse resp) throws javax.servlet.ServletException, java.io.IOException {
         String url = req.getParameter(SHORTEN_PARAM);
@@ -136,5 +140,6 @@ public class ShortenerServlet extends HttpServlet {
         PrintWriter writer = resp.getWriter();
         writer.print(msg);
     }
+
 
 }

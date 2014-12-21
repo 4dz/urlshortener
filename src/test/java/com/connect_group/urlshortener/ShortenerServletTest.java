@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
+import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.junit.Assert.assertThat;
 import static org.mockito.BDDMockito.given;
@@ -149,5 +150,11 @@ public class ShortenerServletTest {
         given(mockRequest.getParameter("callback")).willReturn("somefunction");
         servlet.doGet(mockRequest, mockResponse);
         verify(mockResponse).setContentType("application/javascript");
+    }
+    
+    @Test
+    public void shouldUseDefaultServiceImplementation_WhenDefaultConstructorIsUsedByWebApp() {
+        servlet = new ShortenerServlet();
+        assertThat(servlet.getShortenerService(), instanceOf(ShortenerServiceImpl.class));
     }
 }
