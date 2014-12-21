@@ -59,6 +59,10 @@ public class ShortenerServlet extends HttpServlet {
     
     @Override
     public void doGet(HttpServletRequest req, HttpServletResponse resp) throws javax.servlet.ServletException, java.io.IOException {
+
+        enableCORS(resp);
+
+        
         String url = req.getParameter(SHORTEN_PARAM);
         String callback = req.getParameter(CALLBACK_PARAM);
 
@@ -67,6 +71,10 @@ public class ShortenerServlet extends HttpServlet {
         } else {
             shorten(resp, url, callback);
         }
+    }
+
+    private void enableCORS(HttpServletResponse resp) {
+        resp.setHeader("Access-Control-Allow-Origin","*");
     }
 
     private void expand(String servletPath, String callback, HttpServletResponse resp) throws IOException {

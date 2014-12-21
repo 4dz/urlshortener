@@ -157,4 +157,12 @@ public class ShortenerServletTest {
         servlet = new ShortenerServlet();
         assertThat(servlet.getShortenerService(), instanceOf(ShortenerServiceImpl.class));
     }
+    
+    @Test
+    public void shouldSetCORSHeader() throws ServletException, IOException {
+        given(mockRequest.getParameter("shorten")).willReturn("htt://test/");
+        given(mockRequest.getParameter("callback")).willReturn("somefunction");
+        servlet.doGet(mockRequest, mockResponse);
+        verify(mockResponse).setHeader("Access-Control-Allow-Origin","*");
+    }
 }
