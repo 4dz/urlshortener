@@ -1,6 +1,7 @@
 package com.connect_group.urlshortener.util;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,7 +22,7 @@ import java.util.Map;
  */
 public class BigOrderedRAMSet<E> implements BigOrderedSet<E> {
     private final int PAGE_SIZE;
-    private List<Object[]> pages = new ArrayList<>();
+    private List<Object[]> pages = Collections.synchronizedList(new ArrayList<Object[]>());
     private Map<E,Long> searchIndex = new HashMap<>();
     private long index=0;
     private int pageNo =-1;
@@ -36,23 +37,26 @@ public class BigOrderedRAMSet<E> implements BigOrderedSet<E> {
 
     @Override
     public long add(E element) {
+        long indexForThisThread;
+        
         synchronized(this) {
             Long indexOfElement = searchIndex.get(element);
-            if (indexOfElement == null) {
-
-                if (index % PAGE_SIZE == 0) {
+            if (indexOfElement != null) {
+                return indexOfElement;
+            } else {
+                indexForThisThread = index++;
+                if (indexForThisThread % PAGE_SIZE == 0) {
                     addPage();
                 }
-
-                Object[] page = pages.get(pageNo);
-                int indexWithinPage = (int) (index % PAGE_SIZE);
-                page[indexWithinPage] = element;
-                searchIndex.put(element, index);
-                indexOfElement = index++;
             }
-
-            return indexOfElement;
         }
+        
+        Object[] page = pages.get(pageNo);
+        int indexWithinPage = (int) (indexForThisThread % PAGE_SIZE);
+        page[indexWithinPage] = element;
+        searchIndex.put(element, indexForThisThread);
+
+        return indexForThisThread;
     }
 
     private void addPage() {
@@ -66,13 +70,14 @@ public class BigOrderedRAMSet<E> implements BigOrderedSet<E> {
             if (i >= index) {
                 throw new ArrayIndexOutOfBoundsException("[" + i + "] out of bounds [0-" + (index - 1) + "]");
             }
-            int pageNo = (int) (i / PAGE_SIZE);
-            int indexWithinPage = (int) (i % PAGE_SIZE);
-            Object[] page = pages.get(pageNo);
-
-            @SuppressWarnings("unchecked")
-            E element = (E) page[indexWithinPage];
-            return element;
         }
+        
+        int pageNo = (int) (i / PAGE_SIZE);
+        int indexWithinPage = (int) (i % PAGE_SIZE);
+        Object[] page = pages.get(pageNo);
+
+        @SuppressWarnings("unchecked")
+        E element = (E) page[indexWithinPage];
+        return element;
     }
 }
