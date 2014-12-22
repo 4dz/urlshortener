@@ -1,4 +1,4 @@
-package com.connect_group.urlshortener.util;
+package com.connect_group.urlshortener.baseconversion;
 
 import java.util.Arrays;
 

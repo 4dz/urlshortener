@@ -1,4 +1,4 @@
-package com.connect_group.urlshortener.util;
+package com.connect_group.urlshortener.baseconversion;
 
 import org.junit.Test;
 
@@ -32,8 +32,13 @@ public class BaseNTest {
     }
     
     @Test
-    public void shouldEncodeTwoDigits_WhenValueIsGreaterThanOrEqualToRadix() {
+    public void shouldEncodeTwoDigits_WhenValueIsGreaterThanOrEqualToRadix_AndUsingOrderedAlphabet() {
         assertThat(new BaseN("01").encode(2L), equalTo("10"));
+    }
+
+    @Test
+    public void shouldEncodeTwoDigits_WhenValueIsGreaterThanOrEqualToRadix_AndUsingUnorderedAlphabet() {
+        assertThat(new BaseN("OI").encode(2L), equalTo("IO"));
     }
 
     @Test(expected=IllegalArgumentException.class)

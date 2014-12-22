@@ -1,4 +1,4 @@
-package com.connect_group.urlshortener.util;
+package com.connect_group.urlshortener.baseconversion;
 
 /**
  * Unordered Alphabets have an O(n) search efficiency when

@@ -1,4 +1,6 @@
-package com.connect_group.urlshortener.util;
+package com.connect_group.urlshortener.baseconversion;
+
+import com.connect_group.urlshortener.util.StringHelper;
 
 /**
  * Encode and Decode a long value into a String based on an alphabet.

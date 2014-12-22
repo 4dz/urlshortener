@@ -1,4 +1,4 @@
-package com.connect_group.urlshortener.util;
+package com.connect_group.urlshortener.baseconversion;
 
 /**
  * Abstract alphabet so we can have different search (indexOf) 
