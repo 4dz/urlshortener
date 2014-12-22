@@ -6,6 +6,7 @@ public class ShortenerServiceImpl implements ShortenerService {
 
     @Override
     public String shorten(URL url) {
+
         return url.toString();
     }
 

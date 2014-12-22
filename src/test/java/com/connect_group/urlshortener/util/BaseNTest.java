@@ -77,14 +77,14 @@ public class BaseNTest {
         BaseN slow = new BaseN(LARGE_UNORDERED_ALPHABET);
         
         long start = System.nanoTime();
-        for(int i=0; i<2000000; i++) {
+        for(int i=0; i<1000000; i++) {
             fast.decode("bcr89xyAinioqwhfiuqwVYVXUTQIUWZBZ");
         }
         long end = System.nanoTime();
         long fastDuration = end-start;
 
         start = System.nanoTime();
-        for(int i=0; i<2000000; i++) {
+        for(int i=0; i<1000000; i++) {
             slow.decode("bcr89xyAinioqwhfiuqwVYVXUTQIUWZBZ");
         }
         end = System.nanoTime();
@@ -99,9 +99,6 @@ public class BaseNTest {
             System.out.println("Ordered Alphabet was "+diff +"ns ("+diff/1000000+"ms) slower");
         }
         
-        // want to beat 350ms
-        
-        //2903000L, 12453000L, 25132000L
         assertThat(slowDuration-fastDuration, greaterThan(0L));
     }
 }
