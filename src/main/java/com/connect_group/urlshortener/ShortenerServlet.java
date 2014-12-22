@@ -42,7 +42,7 @@ public class ShortenerServlet extends HttpServlet {
      */
     public ShortenerServlet() {
         super();
-        this.shortenerService = new ShortenerServiceImpl();
+        this.shortenerService = new ShortenerServiceImpl("http://t.ag/");
     }
 
     /**
