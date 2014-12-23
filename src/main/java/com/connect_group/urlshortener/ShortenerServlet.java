@@ -36,21 +36,32 @@ public class ShortenerServlet extends HttpServlet {
 
     public final String SHORTEN_PARAM = "shorten";
     public final String CALLBACK_PARAM = "callback";
+    
+    private final String baseUrl;
 
     /**
      * The default constructor which is used by the web container.
      */
     public ShortenerServlet() {
         super();
-        this.shortenerService = new ShortenerServiceImpl("http://t.ag/");
+        this.shortenerService = new ShortenerServiceImpl();
+        this.baseUrl = "/";
     }
 
     /**
      * Allows for dependancy injection of a ShortenerService to aid in testing.
      */
-    public ShortenerServlet(ShortenerService shortenerService) {
+    public ShortenerServlet(ShortenerService shortenerService, String baseUrl) {
         super();
         this.shortenerService = shortenerService;
+        this.baseUrl=ensureSafeBaseUrl(baseUrl);
+    }
+
+    private String ensureSafeBaseUrl(String baseUrl) {
+        if(!baseUrl.endsWith("/")) {
+            baseUrl+="/";
+        }
+        return baseUrl;
     }
 
     public ShortenerService getShortenerService() {
@@ -119,7 +130,8 @@ public class ShortenerServlet extends HttpServlet {
 
     private void shorten(HttpServletResponse resp, String urlString, String callback) throws IOException {
         try {
-            String shortUrl = shortenerService.shorten(new URL(urlString));
+            String token = shortenerService.shorten(new URL(urlString));
+            String shortUrl = baseUrl + token;
 
             if(StringHelper.isNotEmpty(callback)) {
                 respondWithJsonP(resp, shortUrl, callback);

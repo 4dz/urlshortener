@@ -11,27 +11,29 @@ public class ShortenerServiceImpl implements ShortenerService {
     
     private final BaseN tokenConverter;
     private final BigOrderedSet<String> database;
-    private final String baseUrl;
 
-    public ShortenerServiceImpl(String baseUrl) {
-        this(new BaseN(SAFE_ORDERED_ALPHABET), new BigOrderedRAMSet<String>(), baseUrl);
+    public ShortenerServiceImpl() {
+        this(new BaseN(SAFE_ORDERED_ALPHABET), new BigOrderedRAMSet<String>());
     }
 
-    public ShortenerServiceImpl(BaseN tokenConverter, BigOrderedSet<String> database, String baseUrl) {
+    public ShortenerServiceImpl(BaseN tokenConverter, BigOrderedSet<String> database) {
         this.tokenConverter = tokenConverter;
         this.database = database;
-        this.baseUrl = baseUrl;
     }
     
     @Override
     public String shorten(URL url) {
         long id = database.add(url.toString());
-        String token = tokenConverter.encode(id);
-        return baseUrl + token;
+        return tokenConverter.encode(id);
     }
 
     @Override
     public String expand(String token) throws UnrecognisedTokenException {
-        return null;
+        try {
+            long id = tokenConverter.decode(token);
+            return database.get(id);
+        } catch(IllegalArgumentException ex) {
+            throw new UnrecognisedTokenException(ex.toString());
+        }
     }
 }

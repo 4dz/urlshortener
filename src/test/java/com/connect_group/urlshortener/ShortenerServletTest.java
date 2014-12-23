@@ -32,7 +32,7 @@ public class ShortenerServletTest {
 
     @Before
     public void init() throws IOException {
-        servlet = new ShortenerServlet(new StubShortenerService());
+        servlet = new ShortenerServlet(new StubShortenerService(), "http://t.ag/");
         mockResponse = mock(HttpServletResponse.class);
         mockRequest = mock(HttpServletRequest.class);
         stringWriter = new StringWriter();
@@ -47,7 +47,7 @@ public class ShortenerServletTest {
 
         servlet.doGet(mockRequest, mockResponse);
 
-        assertThat(stringWriter.toString(), equalTo("1"));
+        assertThat(stringWriter.toString(), equalTo("http://t.ag/1"));
     }
 
     @Test
@@ -66,7 +66,7 @@ public class ShortenerServletTest {
         given(mockResponse.getWriter()).willReturn(new PrintWriter(stringWriter));
 
         servlet.doGet(mockRequest, mockResponse);
-        assertThat(stringWriter.toString(), equalTo("2"));
+        assertThat(stringWriter.toString(), equalTo("http://t.ag/2"));
     }
 
     @Test
@@ -118,7 +118,7 @@ public class ShortenerServletTest {
         given(mockRequest.getParameter("shorten")).willReturn("http://test/");
         given(mockRequest.getParameter("callback")).willReturn("myfunction");
         servlet.doGet(mockRequest, mockResponse);
-        assertThat(stringWriter.toString(), equalTo("myfunction({\"url\": \"1\"});"));
+        assertThat(stringWriter.toString(), equalTo("myfunction({\"url\": \"http://t.ag/1\"});"));
     }
 
     @Test
@@ -164,5 +164,16 @@ public class ShortenerServletTest {
         given(mockRequest.getParameter("callback")).willReturn("somefunction");
         servlet.doGet(mockRequest, mockResponse);
         verify(mockResponse).setHeader("Access-Control-Allow-Origin","*");
+    }
+    
+    @Test
+    public void shouldAddSlashToBaseUrl_WhenBaseUrlHasNoSlash() throws ServletException, IOException {
+        servlet = new ShortenerServlet(new StubShortenerService(), "http://t.ag/x");
+        given(mockRequest.getParameter("shorten")).willReturn("http://test/");
+
+        servlet.doGet(mockRequest, mockResponse);
+
+        assertThat(stringWriter.toString(), equalTo("http://t.ag/x/1"));
+
     }
 }
