@@ -24,6 +24,11 @@ public class ShortenerServiceImplTest {
         String token = service.shorten(new URL(url));
         assertThat(service.expand(token), equalTo(url));
     }
+    
+    @Test(expected=UnrecognisedTokenException.class)
+    public void shouldThrowException_WhenNullToken() throws UnrecognisedTokenException {
+        new ShortenerServiceImpl().expand(null);
+    }
 
 
 
