@@ -7,7 +7,7 @@ import com.connect_group.urlshortener.util.StringHelper;
  */
 public class BaseN {
     private Alphabet alphabet;
-    private final int radix;
+    private final long radix;
     
     public BaseN(String alphabet) {
         if(StringHelper.isEmpty(alphabet) || alphabet.length()==1) {
@@ -40,7 +40,7 @@ public class BaseN {
             throw new IllegalArgumentException("Cannot encode negative number (" + number + ")");
         }
         
-        int capacity = (int)(number/radix)+1;
+        int capacity = capacity(number);
         int index=capacity-1;
         char[] encoded = new char[capacity];
 
@@ -53,13 +53,26 @@ public class BaseN {
         return new String(encoded);
     }
     
+    private int capacity(long number) {
+        int i=0;
+        do {
+            number = number / radix;
+            i++;
+        } while(number>0);
+        return i;
+    }
+    
     public long decode(String encoded) {
         if(StringHelper.isEmpty(encoded)) {
             throw new IllegalArgumentException("Cannot decode empty or null string");
         }
         long result=0;
         for(int index=0; index<encoded.length(); index++) {
-            result = (result*radix) + indexOf(encoded.charAt(index));
+            long multiply = (result*radix);
+            if(multiply < result) {
+                throw new IllegalArgumentException("encoded string exceeds maximum 'Long' value");
+            }
+            result = multiply + indexOf(encoded.charAt(index));
         }
         return result;
     }

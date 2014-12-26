@@ -75,6 +75,20 @@ public class BaseNTest {
     public void shouldNotIdentifyOrderedAlphabet_WhenAlphabetNotInAsciiOrder() {
         assertThat(new BaseN(LARGE_UNORDERED_ALPHABET).isOrderedAlphabet(), equalTo(false));
     }
+    
+    @Test
+    public void shouldEncodeLargeNumbers() {
+        BaseN base = new BaseN(LARGE_UNORDERED_ALPHABET);
+        long id = Long.MAX_VALUE;
+        assertThat(base.decode(base.encode(id)), equalTo(Long.MAX_VALUE));
+    }
+    
+    @Test(expected=IllegalArgumentException.class)
+    public void shouldThrowException_WhenTokenExceedsMaxLongValue() {
+        BaseN base37 = new BaseN("-0123456789abcdefghijklmnopqrstuvwxyz");
+        base37.decode("zzzzzzzzzzzzz");
+    }
+    
     @Test
     public void shouldDecodeFaster_WhenOrderedAlphabet() {
         
