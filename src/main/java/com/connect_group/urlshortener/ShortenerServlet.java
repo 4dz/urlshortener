@@ -45,7 +45,7 @@ public class ShortenerServlet extends HttpServlet {
      * The default constructor which is used by the web container.
      */
     public ShortenerServlet() {
-        this(new ShortenerServiceImpl(), ConfigurationImpl.INSTANCE);
+        this(new ShortenerServiceImpl(), ConfigurationImpl.getInstance());
     }
 
     /**

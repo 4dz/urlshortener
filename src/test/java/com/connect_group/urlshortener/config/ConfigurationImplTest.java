@@ -9,8 +9,11 @@ public class ConfigurationImplTest {
 
     @Test
     public void shouldGetValueFromPropertiesFile() {
-        assertThat(ConfigurationImpl.INSTANCE.get(Configuration.Key.BASE_URL), equalTo("http://test.me/"));
+        assertThat(ConfigurationImpl.getInstance().get(Configuration.Key.BASE_URL), equalTo("http://test.me/"));
     }
     
-
+    @Test(expected = ExceptionInInitializerError.class)
+    public void shouldFail_WhenPropertiesFileNotFound() {
+        ConfigurationImpl.load("/notfound.properties");
+    }
 }
