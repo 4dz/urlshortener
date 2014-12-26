@@ -97,14 +97,14 @@ public class BaseNTest {
         
         long start = System.nanoTime();
         for(int i=0; i<1000000; i++) {
-            fast.decode("bcr89xyAinioqwhfiuqwVYVXUTQIUWZBZ");
+            fast.decode("bcr89xyAini");
         }
         long end = System.nanoTime();
         long fastDuration = end-start;
 
         start = System.nanoTime();
         for(int i=0; i<1000000; i++) {
-            slow.decode("bcr89xyAinioqwhfiuqwVYVXUTQIUWZBZ");
+            slow.decode("bcr89xyAini");
         }
         end = System.nanoTime();
         long slowDuration = end-start;
