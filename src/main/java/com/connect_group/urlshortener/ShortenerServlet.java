@@ -1,5 +1,7 @@
 package com.connect_group.urlshortener;
 
+import com.connect_group.urlshortener.config.Configuration;
+import com.connect_group.urlshortener.config.ConfigurationImpl;
 import com.connect_group.urlshortener.util.StringHelper;
 
 import javax.servlet.annotation.WebServlet;
@@ -33,7 +35,7 @@ import java.net.URL;
 public class ShortenerServlet extends HttpServlet {
 
     private final ShortenerService shortenerService;
-
+    
     public final String SHORTEN_PARAM = "shorten";
     public final String CALLBACK_PARAM = "callback";
     
@@ -43,18 +45,16 @@ public class ShortenerServlet extends HttpServlet {
      * The default constructor which is used by the web container.
      */
     public ShortenerServlet() {
-        super();
-        this.shortenerService = new ShortenerServiceImpl();
-        this.baseUrl = "/";
+        this(new ShortenerServiceImpl(), ConfigurationImpl.INSTANCE);
     }
 
     /**
      * Allows for dependancy injection of a ShortenerService to aid in testing.
      */
-    public ShortenerServlet(ShortenerService shortenerService, String baseUrl) {
+    public ShortenerServlet(ShortenerService shortenerService, Configuration config) {
         super();
         this.shortenerService = shortenerService;
-        this.baseUrl=ensureSafeBaseUrl(baseUrl);
+        this.baseUrl=ensureSafeBaseUrl(config.get(Configuration.Key.BASE_URL));
     }
 
     private String ensureSafeBaseUrl(String baseUrl) {

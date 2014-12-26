@@ -1,5 +1,6 @@
 package com.connect_group.urlshortener;
 
+import com.connect_group.urlshortener.stub.Config;
 import com.connect_group.urlshortener.stub.StubShortenerService;
 import org.junit.Before;
 import org.junit.Test;
@@ -32,7 +33,7 @@ public class ShortenerServletTest {
 
     @Before
     public void init() throws IOException {
-        servlet = new ShortenerServlet(new StubShortenerService(), "http://t.ag/");
+        servlet = new ShortenerServlet(new StubShortenerService(), new Config().with("BASE_URL", "http://t.ag/"));
         mockResponse = mock(HttpServletResponse.class);
         mockRequest = mock(HttpServletRequest.class);
         stringWriter = new StringWriter();
@@ -168,7 +169,7 @@ public class ShortenerServletTest {
     
     @Test
     public void shouldAddSlashToBaseUrl_WhenBaseUrlHasNoSlash() throws ServletException, IOException {
-        servlet = new ShortenerServlet(new StubShortenerService(), "http://t.ag/x");
+        servlet = new ShortenerServlet(new StubShortenerService(), new Config().with("BASE_URL", "http://t.ag/x"));
         given(mockRequest.getParameter("shorten")).willReturn("http://test/");
 
         servlet.doGet(mockRequest, mockResponse);
