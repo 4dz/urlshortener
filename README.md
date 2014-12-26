@@ -8,7 +8,7 @@ Simple web service which can shorten and expand a URL, in a tinyurl / bitly fash
 This project is primarily a thought exercise and a way of trying out a few different ideas.  Built using TDD/BDD so should have good test coverage.
 
 TODO:
- * configuration via properties file
+
  * store simple data on disk
  * play with Berkely DB for scalability
  * anti-spam/anti-phishing?
