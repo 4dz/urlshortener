@@ -201,17 +201,8 @@ public class ShortenerServletTest {
     }
     
     @Test
-    public void shouldDisplayErrorInfoOnPageLoad_WhenFailsToCreateBackupDatabaseFile() throws IOException, ServletException {
-        File dir = folder.newFolder();
-        String backupFilePath = dir.getAbsoluteFile() + "/backup.txt";
-        File file = new File(backupFilePath);
-        if(!file.createNewFile()) {
-            fail("Could not create temporary file");
-        }
-        
-        if(!file.setReadOnly()) {
-            fail("Could not make temporary file read-only");
-        }
+    public void shouldDisplayErrorInfoOnShortenPageLoad_WhenFailsToCreateBackupDatabaseFile() throws IOException, ServletException {
+        String backupFilePath = createBackupFile();
 
         servlet = new ShortenerServlet(new Config().with("DISK_BACKUP_FILEPATH", backupFilePath));
 
@@ -220,6 +211,33 @@ public class ShortenerServletTest {
 
         verify(mockResponse).sendError(eq(500), anyString());
         verify(mockResponse, times(1)).sendError(anyInt(), anyString());
+    }
+
+    @Test
+    public void shouldDisplayErrorInfoOnExpandPageLoad_WhenFailsToCreateBackupDatabaseFile() throws IOException, ServletException {
+        String backupFilePath = createBackupFile();
+
+        servlet = new ShortenerServlet(new Config().with("DISK_BACKUP_FILEPATH", backupFilePath));
+
+        given(mockRequest.getServletPath()).willReturn("/expand-me");
+        servlet.doGet(mockRequest, mockResponse);
+
+        verify(mockResponse).sendError(eq(500), anyString());
+        verify(mockResponse, times(1)).sendError(anyInt(), anyString());
+    }
+
+    private String createBackupFile() throws IOException {
+        File dir = folder.newFolder();
+        String backupFilePath = dir.getAbsoluteFile() + "/backup.txt";
+        File file = new File(backupFilePath);
+        if(!file.createNewFile()) {
+            fail("Could not create temporary file");
+        }
+
+        if(!file.setReadOnly()) {
+            fail("Could not make temporary file read-only");
+        }
+        return backupFilePath;
     }
 
     @Test

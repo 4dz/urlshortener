@@ -133,17 +133,9 @@ public class ShortenerServlet extends HttpServlet {
                 permenantRedirect(resp, redirectUrl);
             }
         } catch (UnrecognisedTokenException e) {
-            if(StringHelper.isNotEmpty(callback)) {
-                respondWithJsonPError(resp, e.getMessage(), callback);
-            } else {
-                resp.sendError(HttpServletResponse.SC_NOT_FOUND, e.getMessage());
-            }
+            handleError(resp, HttpServletResponse.SC_NOT_FOUND, e.getMessage(), callback);
         } catch(ShortenerServiceException ex) {
-            if(StringHelper.isNotEmpty(callback)) {
-                respondWithJsonPError(resp, ex.getMessage(), callback);
-            } else {
-                resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, ex.getMessage());
-            }
+            handleError(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, ex.getMessage(), callback);
         }
     }
 
@@ -173,17 +165,17 @@ public class ShortenerServlet extends HttpServlet {
                 respondWithMessage(resp, shortUrl);
             }
         } catch (MalformedURLException ex) {
-            if(StringHelper.isNotEmpty(callback)) {
-                respondWithJsonPError(resp, ex.getMessage(), callback);
-            } else {
-                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, ex.getMessage());
-            }
+            handleError(resp, HttpServletResponse.SC_BAD_REQUEST, ex.getMessage(), callback);
         } catch(ShortenerServiceException ex) {
-            if(StringHelper.isNotEmpty(callback)) {
-                respondWithJsonPError(resp, ex.getMessage(), callback);
-            } else {
-                resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, ex.getMessage());
-            }
+            handleError(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, ex.getMessage(), callback);
+        }
+    }
+    
+    private void handleError(HttpServletResponse resp, int code, String message, String callback) throws IOException {
+        if(StringHelper.isNotEmpty(callback)) {
+            respondWithJsonPError(resp, message, callback);
+        } else {
+            resp.sendError(code, message);
         }
     }
 
