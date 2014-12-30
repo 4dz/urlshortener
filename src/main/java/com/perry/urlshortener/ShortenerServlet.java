@@ -67,11 +67,13 @@ public class ShortenerServlet extends HttpServlet {
     private static ShortenerService createDefaultShortenerService(Configuration config) {
         try {
             String filePath = config.get(Configuration.Key.DISK_BACKUP_FILEPATH);
-            DiskBackupWriter<Utf8String> diskWriter = null;
+            BigOrderedRAMSet<Utf8String> database;
             if (StringHelper.isNotEmpty(filePath)) {
-                diskWriter = new DiskBackupWriter<>(filePath);
+                DiskBackupWriter diskWriter = new DiskBackupWriter(filePath);
+                database = diskWriter.restore(BigOrderedRAMSet.DEFAULT_PAGE_SIZE);
+            } else {
+                database = new BigOrderedRAMSet<>(BigOrderedRAMSet.DEFAULT_PAGE_SIZE);
             }
-            BigOrderedRAMSet<Utf8String> database = new BigOrderedRAMSet<>(BigOrderedRAMSet.DEFAULT_PAGE_SIZE, diskWriter);
             return new ShortenerServiceImpl(new BaseN(ShortenerServiceImpl.SAFE_ORDERED_ALPHABET), database);
         } catch (IOException ex) {
             return new ShortenerServiceUnavailable(ex.getMessage());

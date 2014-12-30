@@ -43,12 +43,12 @@ public class ShortenerServletTest {
     @Before
     public void init() throws IOException {
         servlet = new ShortenerServlet(new StubShortenerService(), new Config().with("BASE_URL", "http://t.ag/"));
-        mockResponse = mock(HttpServletResponse.class);
+        resetMockRequest();
+        resetMockResponse();
+    }
+
+    private void resetMockRequest() {
         mockRequest = mock(HttpServletRequest.class);
-        stringWriter = new StringWriter();
-
-        given(mockResponse.getWriter()).willReturn(new PrintWriter(stringWriter));
-
     }
 
     @Test
@@ -220,5 +220,44 @@ public class ShortenerServletTest {
 
         verify(mockResponse).sendError(eq(500), anyString());
         verify(mockResponse, times(1)).sendError(anyInt(), anyString());
+    }
+
+    @Test
+    public void shouldInitialiseSystemWithDataRecordedToDisk() throws ServletException, IOException {
+        File dir = folder.newFolder();
+        String backupFilePath = dir.getAbsoluteFile() + "/backup.txt";
+        servlet = new ShortenerServlet(new Config().with("DISK_BACKUP_FILEPATH", backupFilePath));
+
+        given(mockRequest.getParameter("shorten")).willReturn("http://test1/").willReturn("http://test2/");
+        servlet.doGet(mockRequest, mockResponse);
+        servlet.doGet(mockRequest, mockResponse);
+        
+        byte[] encoded = Files.readAllBytes(Paths.get(backupFilePath));
+        String fileContents = new String(encoded, "UTF-8");
+        assertThat(fileContents, equalTo("http://test1/\nhttp://test2/\n"));
+
+        ShortenerServlet servlet2 = new ShortenerServlet(new Config().with("DISK_BACKUP_FILEPATH", backupFilePath));
+
+        resetMockRequest();
+        resetMockResponse();
+        given(mockRequest.getServletPath()).willReturn("/-+");
+        servlet2.doGet(mockRequest, mockResponse);
+        assertThat(stringWriter.toString(), equalTo("http://test1/"));
+
+        resetMockRequest();
+        resetMockResponse();
+        given(mockRequest.getServletPath()).willReturn("/2+");
+        servlet2.doGet(mockRequest, mockResponse);
+        assertThat(stringWriter.toString(), equalTo("http://test2/"));
+    }
+    
+    private void resetMockResponse() {
+        stringWriter = new StringWriter();
+        mockResponse = mock(HttpServletResponse.class);
+        try {
+            given(mockResponse.getWriter()).willReturn(new PrintWriter(stringWriter));
+        } catch (IOException e) {
+            fail("Mock threw exception on getWriter()");
+        }
     }
 }
