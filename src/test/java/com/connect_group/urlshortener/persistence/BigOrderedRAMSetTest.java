@@ -1,4 +1,4 @@
-package com.connect_group.urlshortener.util;
+package com.connect_group.urlshortener.persistence;
 
 import org.junit.Test;
 

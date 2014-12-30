@@ -1,4 +1,4 @@
-package com.connect_group.urlshortener.util;
+package com.connect_group.urlshortener.persistence;
 
 import java.util.ArrayList;
 import java.util.Collections;

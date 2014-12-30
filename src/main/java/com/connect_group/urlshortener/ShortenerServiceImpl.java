@@ -1,8 +1,8 @@
 package com.connect_group.urlshortener;
 
 import com.connect_group.urlshortener.baseconversion.BaseN;
-import com.connect_group.urlshortener.util.BigOrderedRAMSet;
-import com.connect_group.urlshortener.util.BigOrderedSet;
+import com.connect_group.urlshortener.persistence.BigOrderedRAMSet;
+import com.connect_group.urlshortener.persistence.BigOrderedSet;
 import com.connect_group.urlshortener.util.Utf8String;
 
 import java.net.URL;
