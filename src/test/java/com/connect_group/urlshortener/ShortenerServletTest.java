@@ -2,15 +2,21 @@ package com.connect_group.urlshortener;
 
 import com.connect_group.urlshortener.stub.Config;
 import com.connect_group.urlshortener.stub.StubShortenerService;
+import org.hamcrest.MatcherAssert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.core.IsEqual.equalTo;
@@ -29,6 +35,8 @@ public class ShortenerServletTest {
     private HttpServletRequest mockRequest;
     private StringWriter stringWriter;
 
+    @Rule
+    public TemporaryFolder folder = new TemporaryFolder();
 
 
     @Before
@@ -154,7 +162,7 @@ public class ShortenerServletTest {
     }
     
     @Test
-    public void shouldUseDefaultServiceImplementation_WhenDefaultConstructorIsUsedByWebApp() {
+    public void shouldUseDefaultServiceImplementation_WhenDefaultConstructorIsUsedByWebApp() throws IOException {
         servlet = new ShortenerServlet();
         assertThat(servlet.getShortenerService(), instanceOf(ShortenerServiceImpl.class));
     }
@@ -175,6 +183,21 @@ public class ShortenerServletTest {
         servlet.doGet(mockRequest, mockResponse);
 
         assertThat(stringWriter.toString(), equalTo("http://t.ag/x/1"));
+    }
+    
+    @Test
+    public void shouldRecordDataToDisk() throws ServletException, IOException {
+        File dir = folder.newFolder();
+        String backupFilePath = dir.getAbsoluteFile() + "/backup.txt";
+        
+        servlet = new ShortenerServlet(new Config().with("DISK_BACKUP_FILEPATH", backupFilePath));
+        given(mockRequest.getParameter("shorten")).willReturn("http://test/");
+
+        servlet.doGet(mockRequest, mockResponse);
+
+        byte[] encoded = Files.readAllBytes(Paths.get(backupFilePath));
+        String fileContents = new String(encoded, "UTF-8");
+        MatcherAssert.assertThat(fileContents, equalTo("http://test/\n"));
 
     }
 }

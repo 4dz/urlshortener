@@ -8,7 +8,7 @@ import com.connect_group.urlshortener.util.Utf8String;
 import java.net.URL;
 
 public class ShortenerServiceImpl implements ShortenerService {
-    private static final String SAFE_ORDERED_ALPHABET ="-23456789BCDFGHJKLMNPQRSTVWXYZ_bcdfghjklmnpqrstvwxyz";
+    public static final String SAFE_ORDERED_ALPHABET ="-23456789BCDFGHJKLMNPQRSTVWXYZ_bcdfghjklmnpqrstvwxyz";
     
     private final BaseN tokenConverter;
     private final BigOrderedSet<Utf8String> database;

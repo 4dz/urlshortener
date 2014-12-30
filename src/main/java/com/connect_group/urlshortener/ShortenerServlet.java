@@ -1,8 +1,12 @@
 package com.connect_group.urlshortener;
 
+import com.connect_group.urlshortener.baseconversion.BaseN;
 import com.connect_group.urlshortener.config.Configuration;
 import com.connect_group.urlshortener.config.ConfigurationImpl;
+import com.connect_group.urlshortener.persistence.BigOrderedRAMSet;
+import com.connect_group.urlshortener.persistence.DiskBackupWriter;
 import com.connect_group.urlshortener.util.StringHelper;
+import com.connect_group.urlshortener.util.Utf8String;
 
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -44,10 +48,13 @@ public class ShortenerServlet extends HttpServlet {
     /**
      * The default constructor which is used by the web container.
      */
-    public ShortenerServlet() {
-        this(new ShortenerServiceImpl(), ConfigurationImpl.getInstance());
+    public ShortenerServlet() throws IOException {
+        this(ConfigurationImpl.getInstance());
     }
 
+    public ShortenerServlet(Configuration config) throws IOException {
+        this(createDefaultShortenerService(config), config);
+    }
     /**
      * Allows for dependancy injection of a ShortenerService to aid in testing.
      */
@@ -55,6 +62,16 @@ public class ShortenerServlet extends HttpServlet {
         super();
         this.shortenerService = shortenerService;
         this.baseUrl=ensureSafeBaseUrl(config.get(Configuration.Key.BASE_URL));
+    }
+    
+    private static ShortenerService createDefaultShortenerService(Configuration config) throws IOException {
+        String filePath = config.get(Configuration.Key.DISK_BACKUP_FILEPATH);
+        DiskBackupWriter<Utf8String> diskWriter = null;
+        if(StringHelper.isNotEmpty(filePath)) {
+            diskWriter = new DiskBackupWriter<>(filePath);
+        }
+        BigOrderedRAMSet<Utf8String> database = new BigOrderedRAMSet<>(BigOrderedRAMSet.DEFAULT_PAGE_SIZE, diskWriter);
+        return new ShortenerServiceImpl(new BaseN(ShortenerServiceImpl.SAFE_ORDERED_ALPHABET), database);
     }
 
     private String ensureSafeBaseUrl(String baseUrl) {

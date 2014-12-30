@@ -23,6 +23,8 @@ import java.util.Map;
  * @param <E>
  */
 public class BigOrderedRAMSet<E> implements BigOrderedSet<E> {
+    public static final int DEFAULT_PAGE_SIZE = 1024*1024;
+    
     private final int PAGE_SIZE;
     private List<Object[]> pages = Collections.synchronizedList(new ArrayList<Object[]>());
     private Map<E,Long> searchIndex = new HashMap<>();
@@ -31,7 +33,7 @@ public class BigOrderedRAMSet<E> implements BigOrderedSet<E> {
     private final SetModificationListener<E> listener;
     
     public BigOrderedRAMSet() {
-        this(1024*1024); // 1 Megabyte
+        this(DEFAULT_PAGE_SIZE); // 1 Megabyte
     }
 
     public BigOrderedRAMSet(int pageSize) {

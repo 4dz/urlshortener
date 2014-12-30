@@ -2,8 +2,7 @@ package com.connect_group.urlshortener.config;
 
 public interface Configuration {
     public enum Key {
-        BASE_URL("/");
-
+        BASE_URL("/"), DISK_BACKUP_FILEPATH("");
         private final String defaultValue;
 
         Key(String defaultValue) {
