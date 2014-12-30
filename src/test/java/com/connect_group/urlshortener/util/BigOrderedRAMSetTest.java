@@ -2,6 +2,8 @@ package com.connect_group.urlshortener.util;
 
 import org.junit.Test;
 
+import java.util.ArrayList;
+
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.IsEqual.equalTo;
 
@@ -60,4 +62,21 @@ public class BigOrderedRAMSetTest {
         assertThat(set.get(5L), equalTo("entry6"));
     }
 
+    @Test
+    public void shouldNotifyDiskWriter_WhenEntryAdded() {
+        final ArrayList<String> entries = new ArrayList<>();
+        SetModificationListener<String> listener = new SetModificationListener<String>() {
+            
+            @Override
+            public void add(long index, String s) {
+                entries.add((int)index, s);
+                
+            }
+        };
+
+        BigOrderedSet<String> set = new BigOrderedRAMSet<>(2, listener);
+        set.add("entry1");
+        assertThat(entries.get(0), equalTo("entry1"));
+        
+    }
 }

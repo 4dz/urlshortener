@@ -30,5 +30,4 @@ public class StringHelperTest {
         assertThat(StringHelper.isNotEmpty(" "), equalTo(true));
     }
 
-
 }

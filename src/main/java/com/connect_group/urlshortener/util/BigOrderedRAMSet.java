@@ -15,8 +15,10 @@ import java.util.Map;
  * Since you are unlikely to have even 32GB of RAM, it is unlikely you could hold
  * half a billion entries in RAM.
  * 
- * Therefore a database or disk cache would be required to back this set if
+ * Therefore a database or disk cache would be required to replace this set if
  * more entries are required.
+ * 
+ * Note that RAM usage is improved by storing UTF-8 strings but this assumes URLs only contain UTF-8 characters.
  *  
  * @param <E>
  */
@@ -26,18 +28,25 @@ public class BigOrderedRAMSet<E> implements BigOrderedSet<E> {
     private Map<E,Long> searchIndex = new HashMap<>();
     private long index=0;
     private int pageNo =-1;
-
+    private final SetModificationListener<E> listener;
+    
     public BigOrderedRAMSet() {
         this(1024*1024); // 1 Megabyte
     }
 
     public BigOrderedRAMSet(int pageSize) {
+        this(pageSize, null);
+    }
+
+    public BigOrderedRAMSet(int pageSize, SetModificationListener<E> listener) {
         this.PAGE_SIZE = pageSize;
+        this.listener=listener;
     }
 
     @Override
     public long add(E element) {
         long indexForThisThread;
+        int pageNo;
         
         synchronized(this) {
             Long indexOfElement = searchIndex.get(element);
@@ -48,6 +57,10 @@ public class BigOrderedRAMSet<E> implements BigOrderedSet<E> {
                 if (indexForThisThread % PAGE_SIZE == 0) {
                     addPage();
                 }
+                pageNo=this.pageNo;
+            }
+            if(listener!=null) {
+                listener.add(indexForThisThread, element);
             }
         }
         
