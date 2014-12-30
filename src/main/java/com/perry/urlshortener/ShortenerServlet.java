@@ -64,14 +64,18 @@ public class ShortenerServlet extends HttpServlet {
         this.baseUrl=ensureSafeBaseUrl(config.get(Configuration.Key.BASE_URL));
     }
     
-    private static ShortenerService createDefaultShortenerService(Configuration config) throws IOException {
-        String filePath = config.get(Configuration.Key.DISK_BACKUP_FILEPATH);
-        DiskBackupWriter<Utf8String> diskWriter = null;
-        if(StringHelper.isNotEmpty(filePath)) {
-            diskWriter = new DiskBackupWriter<>(filePath);
+    private static ShortenerService createDefaultShortenerService(Configuration config) {
+        try {
+            String filePath = config.get(Configuration.Key.DISK_BACKUP_FILEPATH);
+            DiskBackupWriter<Utf8String> diskWriter = null;
+            if (StringHelper.isNotEmpty(filePath)) {
+                diskWriter = new DiskBackupWriter<>(filePath);
+            }
+            BigOrderedRAMSet<Utf8String> database = new BigOrderedRAMSet<>(BigOrderedRAMSet.DEFAULT_PAGE_SIZE, diskWriter);
+            return new ShortenerServiceImpl(new BaseN(ShortenerServiceImpl.SAFE_ORDERED_ALPHABET), database);
+        } catch (IOException ex) {
+            return new ShortenerServiceUnavailable(ex.getMessage());
         }
-        BigOrderedRAMSet<Utf8String> database = new BigOrderedRAMSet<>(BigOrderedRAMSet.DEFAULT_PAGE_SIZE, diskWriter);
-        return new ShortenerServiceImpl(new BaseN(ShortenerServiceImpl.SAFE_ORDERED_ALPHABET), database);
     }
 
     private String ensureSafeBaseUrl(String baseUrl) {
@@ -127,6 +131,12 @@ public class ShortenerServlet extends HttpServlet {
             } else {
                 resp.sendError(HttpServletResponse.SC_NOT_FOUND, e.getMessage());
             }
+        } catch(ShortenerServiceException ex) {
+            if(StringHelper.isNotEmpty(callback)) {
+                respondWithJsonPError(resp, ex.getMessage(), callback);
+            } else {
+                resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, ex.getMessage());
+            }
         }
     }
 
@@ -160,6 +170,12 @@ public class ShortenerServlet extends HttpServlet {
                 respondWithJsonPError(resp, ex.getMessage(), callback);
             } else {
                 resp.sendError(HttpServletResponse.SC_BAD_REQUEST, ex.getMessage());
+            }
+        } catch(ShortenerServiceException ex) {
+            if(StringHelper.isNotEmpty(callback)) {
+                respondWithJsonPError(resp, ex.getMessage(), callback);
+            } else {
+                resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, ex.getMessage());
             }
         }
     }

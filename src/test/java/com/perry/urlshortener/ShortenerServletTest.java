@@ -21,6 +21,7 @@ import java.nio.file.Paths;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.mock;
 import static org.mockito.Matchers.anyInt;
@@ -189,15 +190,35 @@ public class ShortenerServletTest {
     public void shouldRecordDataToDisk() throws ServletException, IOException {
         File dir = folder.newFolder();
         String backupFilePath = dir.getAbsoluteFile() + "/backup.txt";
-        
         servlet = new ShortenerServlet(new Config().with("DISK_BACKUP_FILEPATH", backupFilePath));
+        
         given(mockRequest.getParameter("shorten")).willReturn("http://test/");
-
         servlet.doGet(mockRequest, mockResponse);
 
         byte[] encoded = Files.readAllBytes(Paths.get(backupFilePath));
         String fileContents = new String(encoded, "UTF-8");
         MatcherAssert.assertThat(fileContents, equalTo("http://test/\n"));
+    }
+    
+    @Test
+    public void shouldDisplayErrorInfoOnPageLoad_WhenFailsToCreateBackupDatabaseFile() throws IOException, ServletException {
+        File dir = folder.newFolder();
+        String backupFilePath = dir.getAbsoluteFile() + "/backup.txt";
+        File file = new File(backupFilePath);
+        if(!file.createNewFile()) {
+            fail("Could not create temporary file");
+        }
+        
+        if(!file.setReadOnly()) {
+            fail("Could not make temporary file read-only");
+        }
 
+        servlet = new ShortenerServlet(new Config().with("DISK_BACKUP_FILEPATH", backupFilePath));
+
+        given(mockRequest.getParameter("shorten")).willReturn("http://test/");
+        servlet.doGet(mockRequest, mockResponse);
+
+        verify(mockResponse).sendError(eq(500), anyString());
+        verify(mockResponse, times(1)).sendError(anyInt(), anyString());
     }
 }
