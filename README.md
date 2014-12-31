@@ -11,10 +11,11 @@ The shortener is a JSON web service, and does not have a pretty GUI for ordinary
 
 TODO:
 
- * play with Berkely DB for scalability
+ * GUI
+ * play with ?jboss cache? for scalability (not keen on Berkeley DB license)
  * anti-spam/anti-phishing?
  * track statistics?
- * GUI
+
 
 References
 ==========
