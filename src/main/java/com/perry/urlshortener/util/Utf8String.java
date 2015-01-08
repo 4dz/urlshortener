@@ -1,12 +1,13 @@
 package com.perry.urlshortener.util;
 
 
+import java.io.Serializable;
 import java.nio.charset.Charset;
 
-public class Utf8String {
+public class Utf8String implements Serializable, Comparable<Utf8String> {
     private static final Charset UTF8 = Charset.forName("UTF-8");
     private final byte[] value;
-    private final int hashCode;
+    private transient Integer hashCode;
     
     public Utf8String(String str) {
         this.value = str.getBytes(UTF8);
@@ -43,11 +44,33 @@ public class Utf8String {
     
     @Override
     public int hashCode() {
+        if(hashCode==null) {
+            hashCode = toString().hashCode();
+        } 
         return hashCode;
     }
     
     public final int length() {
         return value.length;
     }
-    
+
+    @Override
+    public int compareTo(Utf8String anotherString) {
+        int len1 = value.length;
+        int len2 = anotherString.value.length;
+        int lim = Math.min(len1, len2);
+        byte v1[] = value;
+        byte v2[] = anotherString.value;
+
+        int k = 0;
+        while (k < lim) {
+            byte c1 = v1[k];
+            byte c2 = v2[k];
+            if (c1 != c2) {
+                return c1 - c2;
+            }
+            k++;
+        }
+        return len1 - len2;
+    }
 }

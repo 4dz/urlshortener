@@ -7,4 +7,7 @@ package com.perry.urlshortener.persistence;
 public interface BigOrderedSet<E> {
     long add(E element);
     E get(long i);
+    Long find(E element);
+    void setSynchronizedListener(SetModificationListener<E> synchronizedListener);
+    void close();
 }
