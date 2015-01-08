@@ -15,7 +15,10 @@ There are two 'databases' available:
  2. A MapDB backed disk store which can support significantly larger data sets.
 
 TODO:
-
+ * Support Distributed, load balanced architecture.
+     * manage/distribute ranges of tokens
+     * Leadership election
+     * Replication
  * GUI?
  * anti-spam/anti-phishing?
  * track statistics?
