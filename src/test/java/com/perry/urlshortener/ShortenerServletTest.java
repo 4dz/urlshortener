@@ -269,6 +269,17 @@ public class ShortenerServletTest {
         assertThat(stringWriter.toString(), equalTo("http://test2/"));
     }
     
+    @Test(expected=RuntimeException.class)
+    public void shouldThrowRuntimeException_WhenDatabaseClasspathInvalid() throws IOException {
+        servlet = new ShortenerServlet(new Config().with("DATABASE_FACTORY_CLASSPATH", "com.does.not.exist"));
+    }
+
+
+    @Test(expected=RuntimeException.class)
+    public void shouldThrowRuntimeException_WhenDatabaseClasspathIsNotInstanceOfExpectedFactory() throws IOException {
+        servlet = new ShortenerServlet(new Config().with("DATABASE_FACTORY_CLASSPATH", "java.lang.Object"));
+    }
+    
     private void resetMockResponse() {
         stringWriter = new StringWriter();
         mockResponse = mock(HttpServletResponse.class);

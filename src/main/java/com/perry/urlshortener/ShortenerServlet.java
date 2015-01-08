@@ -3,8 +3,8 @@ package com.perry.urlshortener;
 import com.perry.urlshortener.baseconversion.BaseN;
 import com.perry.urlshortener.config.Configuration;
 import com.perry.urlshortener.config.ConfigurationImpl;
-import com.perry.urlshortener.persistence.BigOrderedRAMSet;
-import com.perry.urlshortener.persistence.DiskBackupWriter;
+import com.perry.urlshortener.persistence.BigOrderedSet;
+import com.perry.urlshortener.persistence.BigOrderedSetFactory;
 import com.perry.urlshortener.util.StringHelper;
 import com.perry.urlshortener.util.Utf8String;
 
@@ -66,23 +66,26 @@ public class ShortenerServlet extends HttpServlet {
     
     private static ShortenerService createDefaultShortenerService(Configuration config) {
         try {
-            String filePath = config.get(Configuration.Key.DISK_BACKUP_FILEPATH);
-            BigOrderedRAMSet<Utf8String> database = createDatabase(filePath);
+            BigOrderedSet<Utf8String> database = createDatabase(config);
             return new ShortenerServiceImpl(new BaseN(ShortenerServiceImpl.SAFE_ORDERED_ALPHABET), database);
         } catch (IOException ex) {
             return new ShortenerServiceUnavailable(ex.getMessage());
         }
     }
 
-    private static BigOrderedRAMSet<Utf8String> createDatabase(String filePath) throws IOException {
-        BigOrderedRAMSet<Utf8String> database;
-        if (StringHelper.isNotEmpty(filePath)) {
-            DiskBackupWriter diskWriter = new DiskBackupWriter(filePath);
-            database = diskWriter.restore(BigOrderedRAMSet.DEFAULT_PAGE_SIZE);
-        } else {
-            database = new BigOrderedRAMSet<>(BigOrderedRAMSet.DEFAULT_PAGE_SIZE);
+    private static BigOrderedSet<Utf8String> createDatabase(Configuration config) throws IOException {
+        String className = config.get(Configuration.Key.DATABASE_FACTORY_CLASSPATH);
+        try {
+            Object oFactory = Class.forName(className).newInstance();
+            if(oFactory instanceof BigOrderedSetFactory) {
+                BigOrderedSetFactory factory = (BigOrderedSetFactory)oFactory;
+                return factory.newSet(config);
+            }
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException("Failed to instantiate database " + className, e);
         }
-        return database;
+
+        throw new RuntimeException("Failed to instantiate database " + className + " because it did not implement BigOrderedSetFactory");
     }
 
     private String ensureSafeBaseUrl(String baseUrl) {
