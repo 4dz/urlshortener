@@ -31,7 +31,7 @@ public class ConfigurationImpl implements Configuration {
 
     @Override
     public String get(Configuration.Key key){
-        return properties.getProperty(key.toString(), key.getDefault());
+        return System.getProperty(key.toString(), properties.getProperty(key.toString(), key.getDefault()));
     }
 
 }

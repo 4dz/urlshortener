@@ -62,6 +62,14 @@
             <artifactId>mapdb</artifactId>
             <version>1.0.6</version>
         </dependency>
+
+
+        <!-- jgroups can be used to support replication -->
+        <dependency>
+            <groupId>org.jgroups</groupId>
+            <artifactId>jgroups</artifactId>
+            <version>3.6.1.Final</version>
+        </dependency>
     </dependencies>
 
     <build>

@@ -20,7 +20,6 @@ import java.util.NoSuchElementException;
  */
 public class BigOrderedMapDBSet<E> extends AbstractBigOrderedSet<E> {
 
-    
     private final BTreeMap<Long, E> urls;
     private final NavigableSet<Fun.Tuple2<E, Long>> searchIndex;
     private final Atomic.Long counter;
@@ -33,6 +32,8 @@ public class BigOrderedMapDBSet<E> extends AbstractBigOrderedSet<E> {
     public BigOrderedMapDBSet(String dbFilename, SetModificationListener<E> synchronizedListener) {
         File dbFile = new File(dbFilename);
         db = DBMaker.newFileDB(dbFile)
+                .mmapFileEnable()
+                .cacheSoftRefEnable()
                 .closeOnJvmShutdown()
                 .make();
 

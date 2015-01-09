@@ -45,6 +45,9 @@ public class ShortenerServlet extends HttpServlet {
     
     private final String baseUrl;
 
+    // TODO should initialisation occur in 'init()' method and ServletContextListener ?
+    
+    
     /**
      * The default constructor which is used by the web container.
      */
