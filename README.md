@@ -15,10 +15,11 @@ There are two 'databases' available:
  2. A MapDB backed disk store which can support significantly larger data sets.
 
 TODO:
- * Support Distributed, load balanced architecture.
+ * Support Distributed, load balanced architecture. Maybe with http://www.jgroups.org/
      * manage/distribute ranges of tokens
      * Leadership election
      * Replication
+     * Add server to the group
  * GUI?
  * anti-spam/anti-phishing?
  * track statistics?
