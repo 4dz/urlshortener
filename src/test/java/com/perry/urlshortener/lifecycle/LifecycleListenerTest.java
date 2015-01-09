@@ -12,6 +12,7 @@ import java.util.List;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasItemInArray;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
@@ -172,5 +173,11 @@ public class LifecycleListenerTest {
         listener = new LifecycleListener();
         Class dbClass = DatabaseOnStartup.class;
         assertThat(listener.getOnStartupClasses(), hasItemInArray(dbClass));
+    }
+    
+    @Test
+    public void shouldCreateService_OnStartup() {
+        fail("TODO: new service package; ShortenerServiceOnStartup; Get service from scope in servlet");
+        
     }
 }
