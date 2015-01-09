@@ -2,14 +2,14 @@ package com.perry.urlshortener;
 
 import com.perry.urlshortener.baseconversion.BaseN;
 import com.perry.urlshortener.config.Configuration;
-import com.perry.urlshortener.config.ConfigurationImpl;
+import com.perry.urlshortener.lifecycle.Scope;
+import com.perry.urlshortener.lifecycle.ScopeAwareHttpServlet;
 import com.perry.urlshortener.persistence.BigOrderedSet;
-import com.perry.urlshortener.persistence.BigOrderedSetFactory;
 import com.perry.urlshortener.util.StringHelper;
 import com.perry.urlshortener.util.Utf8String;
 
+import javax.servlet.ServletConfig;
 import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -36,59 +36,55 @@ import java.net.URL;
  *
  */
 @WebServlet(urlPatterns={"/"})
-public class ShortenerServlet extends HttpServlet {
+public class ShortenerServlet extends ScopeAwareHttpServlet {
 
-    private final ShortenerService shortenerService;
+    private ShortenerService shortenerService;
     
     public final String SHORTEN_PARAM = "shorten";
     public final String CALLBACK_PARAM = "callback";
     
-    private final String baseUrl;
+    private String baseUrl;
 
     // TODO should initialisation occur in 'init()' method and ServletContextListener ?
     
+    public void setConfiguration(Configuration configuration) {
+        this.baseUrl = ensureSafeBaseUrl(configuration.get(Configuration.Key.BASE_URL));
+    }
+    
+    public void setShortenerService(ShortenerService service) {
+        this.shortenerService = service;
+    }
+    
+    @Override
+    public void init(ServletConfig config) {
+        super.init(config);
+        if(shortenerService==null) {
+            setShortenerService(createDefaultShortenerService());
+        }
+        
+        if(baseUrl==null) {
+            setConfiguration(getScope().getConfiguration());
+        }
+    }
     
     /**
      * The default constructor which is used by the web container.
      */
-    public ShortenerServlet() throws IOException {
-        this(ConfigurationImpl.getInstance());
-    }
+    public ShortenerServlet() {}
 
-    public ShortenerServlet(Configuration config) throws IOException {
-        this(createDefaultShortenerService(config), config);
-    }
-    /**
-     * Allows for dependancy injection of a ShortenerService to aid in testing.
-     */
-    public ShortenerServlet(ShortenerService shortenerService, Configuration config) {
-        super();
-        this.shortenerService = shortenerService;
-        this.baseUrl=ensureSafeBaseUrl(config.get(Configuration.Key.BASE_URL));
-    }
-    
-    private static ShortenerService createDefaultShortenerService(Configuration config) {
-        try {
-            BigOrderedSet<Utf8String> database = createDatabase(config);
-            return new ShortenerServiceImpl(new BaseN(ShortenerServiceImpl.SAFE_ORDERED_ALPHABET), database);
-        } catch (IOException ex) {
-            return new ShortenerServiceUnavailable(ex.getMessage());
-        }
-    }
-
-    private static BigOrderedSet<Utf8String> createDatabase(Configuration config) throws IOException {
-        String className = config.get(Configuration.Key.DATABASE_FACTORY_CLASSPATH);
-        try {
-            Object oFactory = Class.forName(className).newInstance();
-            if(oFactory instanceof BigOrderedSetFactory) {
-                BigOrderedSetFactory factory = (BigOrderedSetFactory)oFactory;
-                return factory.newSet(config);
+    private ShortenerService createDefaultShortenerService() {
+        Scope scope = getScope();
+        String errorMessage = scope.getErrorMessage();
+        if(!scope.isError()) {
+            try {
+                BigOrderedSet<Utf8String> database = getScope().getDatabase();
+                return new ShortenerServiceImpl(new BaseN(ShortenerServiceImpl.SAFE_ORDERED_ALPHABET), database);
+            } catch (Exception ex) {
+                errorMessage = ex.getMessage();
             }
-        } catch (ReflectiveOperationException e) {
-            throw new RuntimeException("Failed to instantiate database " + className, e);
         }
-
-        throw new RuntimeException("Failed to instantiate database " + className + " because it did not implement BigOrderedSetFactory");
+        
+        return new ShortenerServiceUnavailable(errorMessage);
     }
 
     private String ensureSafeBaseUrl(String baseUrl) {

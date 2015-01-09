@@ -1,7 +1,16 @@
 package com.perry.urlshortener;
 
+import com.perry.urlshortener.config.Configuration;
+import com.perry.urlshortener.lifecycle.LifecycleListener;
+import com.perry.urlshortener.lifecycle.MutableScope;
+import com.perry.urlshortener.lifecycle.Scope;
+import com.perry.urlshortener.persistence.BigOrderedMapDBSetFactory;
+import com.perry.urlshortener.persistence.BigOrderedRAMSet;
+import com.perry.urlshortener.persistence.DatabaseOnStartup;
 import com.perry.urlshortener.stub.Config;
+import com.perry.urlshortener.stub.StubServletConfig;
 import com.perry.urlshortener.stub.StubShortenerService;
+import com.perry.urlshortener.util.Utf8String;
 import org.hamcrest.MatcherAssert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -42,9 +51,25 @@ public class ShortenerServletTest {
 
     @Before
     public void init() throws IOException {
-        servlet = new ShortenerServlet(new StubShortenerService(), new Config().with("BASE_URL", "http://t.ag/"));
+        servlet = getShortenerServlet(new StubShortenerService(), new Config().with("BASE_URL", "http://t.ag/"));
         resetMockRequest();
         resetMockResponse();
+    }
+    
+    private static ShortenerServlet getShortenerServlet(ShortenerService service, Configuration config) {
+        ShortenerServlet servlet = new ShortenerServlet();
+        servlet.setShortenerService(service);
+        servlet.setConfiguration(config);
+        return servlet;
+    }
+
+    private static ShortenerServlet getShortenerServlet(Scope scope) {
+        ShortenerServlet servlet = new ShortenerServlet();
+        StubServletConfig servletConfig = new StubServletConfig();
+        given(servletConfig.mockServletContext.getAttribute(LifecycleListener.SCOPE_ATTRIBUTE_NAME)).willReturn(scope);
+
+        servlet.init(servletConfig);
+        return servlet;
     }
 
     private void resetMockRequest() {
@@ -164,7 +189,9 @@ public class ShortenerServletTest {
     
     @Test
     public void shouldUseDefaultServiceImplementation_WhenDefaultConstructorIsUsedByWebApp() throws IOException {
-        servlet = new ShortenerServlet();
+        MutableScope scope = new MutableScope(new Config());
+        scope.setDatabase(new BigOrderedRAMSet<Utf8String>());
+        servlet = getShortenerServlet(scope);
         assertThat(servlet.getShortenerService(), instanceOf(ShortenerServiceImpl.class));
     }
     
@@ -178,7 +205,7 @@ public class ShortenerServletTest {
     
     @Test
     public void shouldAddSlashToBaseUrl_WhenBaseUrlHasNoSlash() throws ServletException, IOException {
-        servlet = new ShortenerServlet(new StubShortenerService(), new Config().with("BASE_URL", "http://t.ag/x"));
+        servlet = getShortenerServlet(new StubShortenerService(), new Config().with("BASE_URL", "http://t.ag/x"));
         given(mockRequest.getParameter("shorten")).willReturn("http://test/");
 
         servlet.doGet(mockRequest, mockResponse);
@@ -187,10 +214,13 @@ public class ShortenerServletTest {
     }
     
     @Test
-    public void shouldRecordDataToDisk() throws ServletException, IOException {
+    public void shouldRecordDataToDisk_WhenUsingRAMSet_AndDiskWriter() throws ServletException, IOException {
         File dir = folder.newFolder();
         String backupFilePath = dir.getAbsoluteFile() + "/backup.txt";
-        servlet = new ShortenerServlet(new Config().with("DISK_BACKUP_FILEPATH", backupFilePath));
+
+        MutableScope scope = new MutableScope(new Config().with("DISK_BACKUP_FILEPATH", backupFilePath));
+        new DatabaseOnStartup().onStart(scope);
+        servlet = getShortenerServlet(scope);
         
         given(mockRequest.getParameter("shorten")).willReturn("http://test/");
         servlet.doGet(mockRequest, mockResponse);
@@ -202,9 +232,9 @@ public class ShortenerServletTest {
     
     @Test
     public void shouldDisplayErrorInfoOnShortenPageLoad_WhenFailsToCreateBackupDatabaseFile() throws IOException, ServletException {
-        String backupFilePath = createBackupFile();
-
-        servlet = new ShortenerServlet(new Config().with("DISK_BACKUP_FILEPATH", backupFilePath));
+        MutableScope scope = new MutableScope(new Config());
+        scope.setError("Error occurred at startup");
+        servlet = getShortenerServlet(scope);
 
         given(mockRequest.getParameter("shorten")).willReturn("http://test/");
         servlet.doGet(mockRequest, mockResponse);
@@ -214,10 +244,10 @@ public class ShortenerServletTest {
     }
 
     @Test
-    public void shouldDisplayErrorInfoOnExpandPageLoad_WhenFailsToCreateBackupDatabaseFile() throws IOException, ServletException {
-        String backupFilePath = createBackupFile();
-
-        servlet = new ShortenerServlet(new Config().with("DISK_BACKUP_FILEPATH", backupFilePath));
+    public void shouldDisplayErrorInfoOnExpandPageLoad_WhenErrorsOccurredAtStartup() throws IOException, ServletException {
+        MutableScope scope = new MutableScope(new Config());
+        scope.setError("Error occurred at startup");
+        servlet = getShortenerServlet(scope);
 
         given(mockRequest.getServletPath()).willReturn("/expand-me");
         servlet.doGet(mockRequest, mockResponse);
@@ -226,25 +256,13 @@ public class ShortenerServletTest {
         verify(mockResponse, times(1)).sendError(anyInt(), anyString());
     }
 
-    private String createBackupFile() throws IOException {
-        File dir = folder.newFolder();
-        String backupFilePath = dir.getAbsoluteFile() + "/backup.txt";
-        File file = new File(backupFilePath);
-        if(!file.createNewFile()) {
-            fail("Could not create temporary file");
-        }
-
-        if(!file.setReadOnly()) {
-            fail("Could not make temporary file read-only");
-        }
-        return backupFilePath;
-    }
-
     @Test
     public void shouldInitialiseSystemWithDataRecordedToDisk() throws ServletException, IOException {
         File dir = folder.newFolder();
         String backupFilePath = dir.getAbsoluteFile() + "/backup.txt";
-        servlet = new ShortenerServlet(new Config().with("DISK_BACKUP_FILEPATH", backupFilePath));
+        MutableScope scope = new MutableScope(new Config().with("DISK_BACKUP_FILEPATH", backupFilePath));
+        new DatabaseOnStartup().onStart(scope);
+        servlet = getShortenerServlet(scope);
 
         given(mockRequest.getParameter("shorten")).willReturn("http://test1/").willReturn("http://test2/");
         servlet.doGet(mockRequest, mockResponse);
@@ -254,7 +272,7 @@ public class ShortenerServletTest {
         String fileContents = new String(encoded, "UTF-8");
         assertThat(fileContents, equalTo("http://test1/\nhttp://test2/\n"));
 
-        ShortenerServlet servlet2 = new ShortenerServlet(new Config().with("DISK_BACKUP_FILEPATH", backupFilePath));
+        ShortenerServlet servlet2 = getShortenerServlet(scope);
 
         resetMockRequest();
         resetMockResponse();
@@ -271,13 +289,17 @@ public class ShortenerServletTest {
     
     @Test(expected=RuntimeException.class)
     public void shouldThrowRuntimeException_WhenDatabaseClasspathInvalid() throws IOException {
-        servlet = new ShortenerServlet(new Config().with("DATABASE_FACTORY_CLASSPATH", "com.does.not.exist"));
+        MutableScope scope = new MutableScope(new Config().with("DATABASE_FACTORY_CLASSPATH", "com.does.not.exist"));
+        scope.setDatabase(new BigOrderedMapDBSetFactory().newSet(scope.getConfiguration()));
+        servlet = getShortenerServlet(scope);
     }
 
 
     @Test(expected=RuntimeException.class)
     public void shouldThrowRuntimeException_WhenDatabaseClasspathIsNotInstanceOfExpectedFactory() throws IOException {
-        servlet = new ShortenerServlet(new Config().with("DATABASE_FACTORY_CLASSPATH", "java.lang.Object"));
+        MutableScope scope = new MutableScope(new Config().with("DATABASE_FACTORY_CLASSPATH", "java.lang.Object"));
+        scope.setDatabase(new BigOrderedMapDBSetFactory().newSet(scope.getConfiguration()));
+        servlet = getShortenerServlet(scope);
     }
     
     private void resetMockResponse() {
