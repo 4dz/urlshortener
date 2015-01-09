@@ -1,5 +1,6 @@
 package com.perry.urlshortener.lifecycle;
 
+import com.perry.urlshortener.persistence.DatabaseOnStartup;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -9,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasItemInArray;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
@@ -163,5 +165,12 @@ public class LifecycleListenerTest {
 
         assertThat(called[0], equalTo(false));
         assertThat(called[1], equalTo(true));
+    }
+    
+    @Test
+    public void shouldStartDatabase_OnStartup() {
+        listener = new LifecycleListener();
+        Class dbClass = DatabaseOnStartup.class;
+        assertThat(listener.getOnStartupClasses(), hasItemInArray(dbClass));
     }
 }

@@ -3,6 +3,7 @@ package com.perry.urlshortener.lifecycle;
 import com.perry.urlshortener.cluster.ClusterOnStartup;
 import com.perry.urlshortener.cluster.ClusterOnStop;
 import com.perry.urlshortener.config.ConfigurationImpl;
+import com.perry.urlshortener.persistence.DatabaseOnStartup;
 
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
@@ -17,7 +18,7 @@ import java.util.List;
 @WebListener
 public class LifecycleListener implements ServletContextListener {
     
-    private static final Class<?>[] STARTUP = {ClusterOnStartup.class};
+    private static final Class<?>[] STARTUP = {DatabaseOnStartup.class, ClusterOnStartup.class};
     private static final Class<?>[] STOP = {ClusterOnStop.class};
     public static final String SCOPE_ATTRIBUTE_NAME="com.perry.urlshortener.lifecycle.LifecycleListener.Scope";
     
