@@ -9,10 +9,18 @@ This project is primarily a thought exercise and a way of trying out a few diffe
 
 The shortener is a JSON web service, and does not have a pretty GUI for ordinary web users.  In a future iteration I may add a GUI.
 
-TODO:
+There are two 'databases' available:
 
- * GUI
- * play with ?jboss cache? for scalability (not keen on Berkeley DB license)
+ 1. An optimised RAM based map, which can persist to disk.
+ 2. A MapDB backed disk store which can support significantly larger data sets.
+
+TODO:
+ * Support Distributed, load balanced architecture. Maybe with http://www.jgroups.org/
+     * manage/distribute ranges of tokens
+     * Leadership election
+     * Replication
+     * Add server to the group
+ * GUI?
  * anti-spam/anti-phishing?
  * track statistics?
 
@@ -20,3 +28,4 @@ TODO:
 References
 ==========
  * http://devslovebacon.com/conferences/bacon-2014/talks/lessons-learned-building-distributed-systems-at-bitly
+ * http://www.mapdb.org/ and https://github.com/jankotek/MapDB
