@@ -1,12 +1,12 @@
 package com.perry.urlshortener;
 
 import com.perry.urlshortener.config.Configuration;
+import com.perry.urlshortener.lifecycle.Scope;
 import com.perry.urlshortener.lifecycle.ScopeAwareHttpServlet;
 import com.perry.urlshortener.service.ShortenerService;
 import com.perry.urlshortener.service.ShortenerServiceException;
 import com.perry.urlshortener.util.StringHelper;
 
-import javax.servlet.ServletConfig;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -43,8 +43,6 @@ public class ShortenerServlet extends ScopeAwareHttpServlet {
     
     private String baseUrl;
 
-    // TODO should initialisation occur in 'init()' method and ServletContextListener ?
-    
     public void setConfiguration(Configuration configuration) {
         this.baseUrl = ensureSafeBaseUrl(configuration.get(Configuration.Key.BASE_URL));
     }
@@ -54,14 +52,13 @@ public class ShortenerServlet extends ScopeAwareHttpServlet {
     }
     
     @Override
-    public void init(ServletConfig config) {
-        super.init(config);
+    public void init(Scope scope) {
         if(shortenerService==null) {
-            setShortenerService(getScope().getShortenerService());
+            setShortenerService(scope.getShortenerService());
         }
         
         if(baseUrl==null) {
-            setConfiguration(getScope().getConfiguration());
+            setConfiguration(scope.getConfiguration());
         }
     }
     
