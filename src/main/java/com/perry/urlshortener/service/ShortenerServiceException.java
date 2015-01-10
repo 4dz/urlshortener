@@ -1,4 +1,4 @@
-package com.perry.urlshortener;
+package com.perry.urlshortener.service;
 
 public class ShortenerServiceException extends Exception {
     

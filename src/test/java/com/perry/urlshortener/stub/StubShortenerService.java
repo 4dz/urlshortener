@@ -1,6 +1,6 @@
 package com.perry.urlshortener.stub;
 
-import com.perry.urlshortener.ShortenerService;
+import com.perry.urlshortener.service.ShortenerService;
 import com.perry.urlshortener.UnrecognisedTokenException;
 
 import java.net.URL;

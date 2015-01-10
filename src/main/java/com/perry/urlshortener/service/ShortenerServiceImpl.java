@@ -1,5 +1,6 @@
-package com.perry.urlshortener;
+package com.perry.urlshortener.service;
 
+import com.perry.urlshortener.UnrecognisedTokenException;
 import com.perry.urlshortener.baseconversion.BaseN;
 import com.perry.urlshortener.persistence.BigOrderedRAMSet;
 import com.perry.urlshortener.persistence.BigOrderedSet;

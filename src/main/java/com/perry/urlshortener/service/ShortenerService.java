@@ -1,4 +1,4 @@
-package com.perry.urlshortener;
+package com.perry.urlshortener.service;
 
 import java.net.URL;
 

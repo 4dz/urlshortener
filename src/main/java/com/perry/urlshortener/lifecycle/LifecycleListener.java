@@ -4,6 +4,7 @@ import com.perry.urlshortener.cluster.ClusterOnStartup;
 import com.perry.urlshortener.cluster.ClusterOnStop;
 import com.perry.urlshortener.config.ConfigurationImpl;
 import com.perry.urlshortener.persistence.DatabaseOnStartup;
+import com.perry.urlshortener.service.ShortenerServiceOnStartup;
 
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
@@ -12,13 +13,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * As we aren't using a nice (but heavy) framework, like Spring,
- * provide some kind of IoC alternative.
+ * As we aren't using a nice IoC framework, like Spring/Guice,
+ * provide a kind of JavaConfig alternative.
  */
 @WebListener
 public class LifecycleListener implements ServletContextListener {
     
-    private static final Class<?>[] STARTUP = {DatabaseOnStartup.class, ClusterOnStartup.class};
+    private static final Class<?>[] STARTUP = {DatabaseOnStartup.class, ClusterOnStartup.class, ShortenerServiceOnStartup.class};
     private static final Class<?>[] STOP = {ClusterOnStop.class};
     public static final String SCOPE_ATTRIBUTE_NAME="com.perry.urlshortener.lifecycle.LifecycleListener.Scope";
     

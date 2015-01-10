@@ -1,12 +1,10 @@
 package com.perry.urlshortener;
 
-import com.perry.urlshortener.baseconversion.BaseN;
 import com.perry.urlshortener.config.Configuration;
-import com.perry.urlshortener.lifecycle.Scope;
 import com.perry.urlshortener.lifecycle.ScopeAwareHttpServlet;
-import com.perry.urlshortener.persistence.BigOrderedSet;
+import com.perry.urlshortener.service.ShortenerService;
+import com.perry.urlshortener.service.ShortenerServiceException;
 import com.perry.urlshortener.util.StringHelper;
-import com.perry.urlshortener.util.Utf8String;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.annotation.WebServlet;
@@ -59,7 +57,7 @@ public class ShortenerServlet extends ScopeAwareHttpServlet {
     public void init(ServletConfig config) {
         super.init(config);
         if(shortenerService==null) {
-            setShortenerService(createDefaultShortenerService());
+            setShortenerService(getScope().getShortenerService());
         }
         
         if(baseUrl==null) {
@@ -71,21 +69,6 @@ public class ShortenerServlet extends ScopeAwareHttpServlet {
      * The default constructor which is used by the web container.
      */
     public ShortenerServlet() {}
-
-    private ShortenerService createDefaultShortenerService() {
-        Scope scope = getScope();
-        String errorMessage = scope.getErrorMessage();
-        if(!scope.isError()) {
-            try {
-                BigOrderedSet<Utf8String> database = getScope().getDatabase();
-                return new ShortenerServiceImpl(new BaseN(ShortenerServiceImpl.SAFE_ORDERED_ALPHABET), database);
-            } catch (Exception ex) {
-                errorMessage = ex.getMessage();
-            }
-        }
-        
-        return new ShortenerServiceUnavailable(errorMessage);
-    }
 
     private String ensureSafeBaseUrl(String baseUrl) {
         if(!baseUrl.endsWith("/")) {

@@ -1,6 +1,7 @@
 package com.perry.urlshortener.lifecycle;
 
 import com.perry.urlshortener.persistence.DatabaseOnStartup;
+import com.perry.urlshortener.service.ShortenerServiceOnStartup;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -12,7 +13,6 @@ import java.util.List;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasItemInArray;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
@@ -172,12 +172,13 @@ public class LifecycleListenerTest {
     public void shouldStartDatabase_OnStartup() {
         listener = new LifecycleListener();
         Class dbClass = DatabaseOnStartup.class;
-        assertThat(listener.getOnStartupClasses(), hasItemInArray(dbClass));
+        assertThat("Database should be added to scope at lifecycle startup", listener.getOnStartupClasses(), hasItemInArray(dbClass));
     }
     
     @Test
-    public void shouldCreateService_OnStartup() {
-        fail("TODO: new service package; ShortenerServiceOnStartup; Get service from scope in servlet");
-        
+    public void shouldCreateShortenerService_OnStartup() {
+        listener = new LifecycleListener();
+        Class servletClass = ShortenerServiceOnStartup.class;
+        assertThat("ShortenerService should be added to scope at lifecycle startup", listener.getOnStartupClasses(), hasItemInArray(servletClass));
     }
 }

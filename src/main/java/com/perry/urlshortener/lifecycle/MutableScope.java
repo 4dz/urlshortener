@@ -2,6 +2,7 @@ package com.perry.urlshortener.lifecycle;
 
 import com.perry.urlshortener.config.Configuration;
 import com.perry.urlshortener.persistence.BigOrderedSet;
+import com.perry.urlshortener.service.ShortenerService;
 import com.perry.urlshortener.util.Utf8String;
 import org.jgroups.JChannel;
 
@@ -10,6 +11,7 @@ public class MutableScope implements Scope {
     private JChannel channel;
     private BigOrderedSet<Utf8String> database;
     private String error;
+    private ShortenerService shortenerService;
     
     public MutableScope(Configuration configuration) {
         this.configuration = configuration;
@@ -28,6 +30,11 @@ public class MutableScope implements Scope {
     @Override
     public BigOrderedSet<Utf8String> getDatabase() {
         return database;
+    }
+
+    @Override
+    public ShortenerService getShortenerService() {
+        return shortenerService;
     }
 
     @Override
@@ -50,5 +57,9 @@ public class MutableScope implements Scope {
 
     public void setError(String message) {
         this.error = message;
+    }
+
+    public void setShortenerService(ShortenerService shortenerService) {
+        this.shortenerService = shortenerService;
     }
 }

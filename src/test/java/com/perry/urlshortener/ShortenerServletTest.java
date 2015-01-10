@@ -7,6 +7,9 @@ import com.perry.urlshortener.lifecycle.Scope;
 import com.perry.urlshortener.persistence.BigOrderedMapDBSetFactory;
 import com.perry.urlshortener.persistence.BigOrderedRAMSet;
 import com.perry.urlshortener.persistence.DatabaseOnStartup;
+import com.perry.urlshortener.service.ShortenerService;
+import com.perry.urlshortener.service.ShortenerServiceImpl;
+import com.perry.urlshortener.service.ShortenerServiceOnStartup;
 import com.perry.urlshortener.stub.Config;
 import com.perry.urlshortener.stub.StubServletConfig;
 import com.perry.urlshortener.stub.StubShortenerService;
@@ -27,7 +30,6 @@ import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
-import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
@@ -188,11 +190,13 @@ public class ShortenerServletTest {
     }
     
     @Test
-    public void shouldUseDefaultServiceImplementation_WhenDefaultConstructorIsUsedByWebApp() throws IOException {
+    public void shouldUseScopedServiceImplementation_WhenDefaultConstructorIsUsedByWebApp() throws IOException {
+        ShortenerService service = new ShortenerServiceImpl();
         MutableScope scope = new MutableScope(new Config());
         scope.setDatabase(new BigOrderedRAMSet<Utf8String>());
+        scope.setShortenerService(service);
         servlet = getShortenerServlet(scope);
-        assertThat(servlet.getShortenerService(), instanceOf(ShortenerServiceImpl.class));
+        assertThat(servlet.getShortenerService(), equalTo(service));
     }
     
     @Test
@@ -200,7 +204,7 @@ public class ShortenerServletTest {
         given(mockRequest.getParameter("shorten")).willReturn("htt://test/");
         given(mockRequest.getParameter("callback")).willReturn("somefunction");
         servlet.doGet(mockRequest, mockResponse);
-        verify(mockResponse).setHeader("Access-Control-Allow-Origin","*");
+        verify(mockResponse).setHeader("Access-Control-Allow-Origin", "*");
     }
     
     @Test
@@ -220,6 +224,7 @@ public class ShortenerServletTest {
 
         MutableScope scope = new MutableScope(new Config().with("DISK_BACKUP_FILEPATH", backupFilePath));
         new DatabaseOnStartup().onStart(scope);
+        new ShortenerServiceOnStartup().onStart(scope);
         servlet = getShortenerServlet(scope);
         
         given(mockRequest.getParameter("shorten")).willReturn("http://test/");
@@ -234,6 +239,7 @@ public class ShortenerServletTest {
     public void shouldDisplayErrorInfoOnShortenPageLoad_WhenFailsToCreateBackupDatabaseFile() throws IOException, ServletException {
         MutableScope scope = new MutableScope(new Config());
         scope.setError("Error occurred at startup");
+        new ShortenerServiceOnStartup().onStart(scope);
         servlet = getShortenerServlet(scope);
 
         given(mockRequest.getParameter("shorten")).willReturn("http://test/");
@@ -247,6 +253,7 @@ public class ShortenerServletTest {
     public void shouldDisplayErrorInfoOnExpandPageLoad_WhenErrorsOccurredAtStartup() throws IOException, ServletException {
         MutableScope scope = new MutableScope(new Config());
         scope.setError("Error occurred at startup");
+        new ShortenerServiceOnStartup().onStart(scope);
         servlet = getShortenerServlet(scope);
 
         given(mockRequest.getServletPath()).willReturn("/expand-me");
@@ -262,6 +269,7 @@ public class ShortenerServletTest {
         String backupFilePath = dir.getAbsoluteFile() + "/backup.txt";
         MutableScope scope = new MutableScope(new Config().with("DISK_BACKUP_FILEPATH", backupFilePath));
         new DatabaseOnStartup().onStart(scope);
+        new ShortenerServiceOnStartup().onStart(scope);
         servlet = getShortenerServlet(scope);
 
         given(mockRequest.getParameter("shorten")).willReturn("http://test1/").willReturn("http://test2/");

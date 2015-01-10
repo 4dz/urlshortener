@@ -1,5 +1,6 @@
-package com.perry.urlshortener;
+package com.perry.urlshortener.service;
 
+import com.perry.urlshortener.UnrecognisedTokenException;
 import org.junit.Test;
 
 import java.net.MalformedURLException;
