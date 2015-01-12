@@ -61,13 +61,33 @@ public class BigOrderedSetTest {
     }
 
     @Test
-    public void shouldNotifyDiskWriter_WhenEntryAdded() {
+    public void shouldNotifyListener_WhenEntryAdded() {
         final ArrayList<String> entries = new ArrayList<>();
         SetModificationListener<String> listener = new SetModificationListener<String>() {
 
             @Override
-            public void add(long index, String s) {
-                entries.add((int)index, s);
+            public void add(SetEntry<String> entry) {
+                entries.add(entry.getKey().intValue(), entry.getValue());
+            }
+
+            @Override
+            public void close() {}
+        };
+
+        set.addSynchronizedListener(listener);
+        set.add("entryWithListener");
+        assertThat(entries.get(0), equalTo("entryWithListener"));
+    }
+
+    @Test
+    public void shouldNotifyAllListeners_WhenEntryAdded() {
+        final ArrayList<String> entries1 = new ArrayList<>();
+        final ArrayList<String> entries2 = new ArrayList<>();
+        SetModificationListener<String> listener1 = new SetModificationListener<String>() {
+
+            @Override
+            public void add(SetEntry<String> entry) {
+                entries1.add(entry.getKey().intValue(), entry.getValue());
 
             }
 
@@ -75,9 +95,23 @@ public class BigOrderedSetTest {
             public void close() {}
         };
 
-        set.setSynchronizedListener(listener);
-        set.add("entryWithListener");
-        assertThat(entries.get(0), equalTo("entryWithListener"));
+        SetModificationListener<String> listener2 = new SetModificationListener<String>() {
+
+            @Override
+            public void add(SetEntry<String> entry) {
+                entries2.add(entry.getKey().intValue(), entry.getValue());
+
+            }
+
+            @Override
+            public void close() {}
+        };
+
+        set.addSynchronizedListener(listener1);
+        set.addSynchronizedListener(listener2);
+        set.add("entryWithTwoListeners");
+        assertThat(entries1.get(0), equalTo("entryWithTwoListeners"));
+        assertThat(entries2.get(0), equalTo("entryWithTwoListeners"));
     }
 
     @Test
@@ -86,7 +120,7 @@ public class BigOrderedSetTest {
 
         SetModificationListener<String> listener = new SetModificationListener<String>() {
             @Override
-            public void add(long index, String s) {}
+            public void add(SetEntry<String> entry) {}
 
             @Override
             public void close() {
@@ -95,7 +129,7 @@ public class BigOrderedSetTest {
             }
         };
 
-        set.setSynchronizedListener(listener);
+        set.addSynchronizedListener(listener);
         assertThat(closed[0], equalTo(false));
         set.close();
         assertThat(closed[0], equalTo(true));
@@ -112,13 +146,13 @@ public class BigOrderedSetTest {
     public static Collection<Object[]> instancesToTest() throws IOException {
 
 
-        return Arrays.asList(
-                new Object[]{new SetFactory() {
-                    @Override
-                    public BigOrderedSet<String> newSet(TemporaryFolder tmpFolder) {
-                        return new BigOrderedRAMSet<>();
-                    }
-                }},
+        return Arrays.<Object[]>asList(
+//                new Object[]{new SetFactory() {
+//                    @Override
+//                    public BigOrderedSet<String> newSet(TemporaryFolder tmpFolder) {
+//                        return new BigOrderedRAMSet<>();
+//                    }
+//                }},
 
                 new Object[]{new SetFactory() {
                     @Override

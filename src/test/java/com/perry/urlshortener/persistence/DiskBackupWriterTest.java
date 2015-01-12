@@ -48,7 +48,7 @@ public class DiskBackupWriterTest {
     public void shouldRecordSetEntryToDisk() throws IOException {
         createDiskBackupWriter();
         
-        writer.add(0, new Utf8String("expected entry"));
+        writer.add(new SetEntry<>(0, new Utf8String("expected entry")));
 
         byte[] encoded = Files.readAllBytes(Paths.get(filename));
         String fileContents = new String(encoded, "UTF-8");

@@ -21,6 +21,7 @@ public class ClusterOnStartup implements OnStartup {
             channel.connect("urlshortener");
 
             scope.setCluster(channel);
+            scope.getDatabase().addSynchronizedListener(new NotifyClusterOnAddToDatabase(channel));
         } catch (Exception e) {
             // TODO!
             e.printStackTrace();

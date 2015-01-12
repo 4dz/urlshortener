@@ -8,6 +8,6 @@ public interface BigOrderedSet<E> {
     long add(E element);
     E get(long i);
     Long find(E element);
-    void setSynchronizedListener(SetModificationListener<E> synchronizedListener);
+    void addSynchronizedListener(SetModificationListener<E> synchronizedListener);
     void close();
 }

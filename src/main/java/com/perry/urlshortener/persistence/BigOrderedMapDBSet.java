@@ -26,10 +26,6 @@ public class BigOrderedMapDBSet<E> extends AbstractBigOrderedSet<E> {
     private final DB db;
     
     public BigOrderedMapDBSet(String dbFilename) {
-        this(dbFilename, null);
-    }
-    
-    public BigOrderedMapDBSet(String dbFilename, SetModificationListener<E> synchronizedListener) {
         File dbFile = new File(dbFilename);
         db = DBMaker.newFileDB(dbFile)
                 .mmapFileEnable()
@@ -40,11 +36,9 @@ public class BigOrderedMapDBSet<E> extends AbstractBigOrderedSet<E> {
         this.urls = db.getTreeMap("urls");
         this.searchIndex = db.getTreeSet("searchIndex");
         this.counter = db.getAtomicLong("counter");
-        
+
         // bind inverse mapping to primary map, so it is auto-updated
         Bind.mapInverse(urls, searchIndex);
-
-        this.setSynchronizedListener(synchronizedListener);
     }
     
     @Override

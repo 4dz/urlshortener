@@ -30,8 +30,8 @@ public class DiskBackupWriter implements SetModificationListener<Utf8String> {
     }
     
     @Override
-    public void add(long index, Utf8String entry) {
-        out.println(entry.toString());
+    public void add(SetEntry<Utf8String> setEntry) {
+        out.println(setEntry.getValue().toString());
         out.flush();
     }
     
@@ -57,7 +57,7 @@ public class DiskBackupWriter implements SetModificationListener<Utf8String> {
             }
         }
 
-        set.setSynchronizedListener(this);
+        set.addSynchronizedListener(this);
         return set;
     }
 }
