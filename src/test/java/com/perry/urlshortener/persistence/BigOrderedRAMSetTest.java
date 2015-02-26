@@ -7,7 +7,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.IsEqual.equalTo;
 
 public class BigOrderedRAMSetTest {
-    private BigOrderedSet<String> set;
+    private BigOrderedRAMSet<String> set;
     
     @Before
     public void init() {
@@ -37,5 +37,24 @@ public class BigOrderedRAMSetTest {
         assertThat(set.get(5L), equalTo("entry6"));
     }
 
+    @Test
+    public void shouldAddElementToSet_WhenMirroringClusteredDatabase_AndPageExists() {
+        set.mirror(777L, "HELLO");
+        assertThat(set.get(777L), equalTo("HELLO"));
+    }
+
+    @Test
+    public void shouldAddElementToSet_AfterMirroringClusteredDatabase_AndPageDoesNotExist() {
+        set = new BigOrderedRAMSet<>(2);
+        set.mirror(5L, "HELLO");
+        assertThat(set.get(5L), equalTo("HELLO"));
+    }
+
+    @Test
+    public void shouldAddElementToSet_AfterMirroringClusteredDatabase() {
+        set = new BigOrderedRAMSet<>(2);
+        set.mirror(5L, "HELLO");
+        assertThat(set.add("entry1"), equalTo(0L));
+    }
 
 }

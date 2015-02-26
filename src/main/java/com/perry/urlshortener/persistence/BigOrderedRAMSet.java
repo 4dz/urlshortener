@@ -25,8 +25,9 @@ public class BigOrderedRAMSet<E> extends AbstractBigOrderedSet<E> {
     public static final int DEFAULT_PAGE_SIZE = 1024*1024;
     
     private final int PAGE_SIZE;
-    private List<Object[]> pages = Collections.synchronizedList(new ArrayList<Object[]>());
-    private Map<E,Long> searchIndex = new HashMap<>();
+    private final ArrayList<LazyFixedSizeArray> __unsynchronizedList = new ArrayList<>();
+    private final List<LazyFixedSizeArray> pages = Collections.synchronizedList(__unsynchronizedList);
+    private final Map<E,Long> searchIndex = new HashMap<>();
     private long index=0;
     private int pageNo =-1;
 
@@ -40,18 +41,24 @@ public class BigOrderedRAMSet<E> extends AbstractBigOrderedSet<E> {
 
     @Override
     public E get(long i) {
+        
+        int pageNo = (int) (i / PAGE_SIZE);
         synchronized (this) {
-            if (i >= index) {
-                throw new NoSuchElementException("[" + i + "] out of bounds [0-" + (index - 1) + "]");
+            if (pageNo >= pages.size()) {
+                throw new NoSuchElementException("[" + i + "] out of bounds.");
             }
         }
         
-        int pageNo = (int) (i / PAGE_SIZE);
+        
         int indexWithinPage = (int) (i % PAGE_SIZE);
-        Object[] page = pages.get(pageNo);
+        LazyFixedSizeArray page = pages.get(pageNo);
 
         @SuppressWarnings("unchecked")
-        E element = (E) page[indexWithinPage];
+        E element = (E) page.get(indexWithinPage);
+        
+        if(element==null) {
+            throw new NoSuchElementException("[" + i + "] does not exist.");
+        }
         return element;
     }
     
@@ -67,7 +74,25 @@ public class BigOrderedRAMSet<E> extends AbstractBigOrderedSet<E> {
     public Appender<E> getAppender() {
         return new RAMSetAppender();
     }
-    
+
+    @Override
+    public void mirror(Long id, E value) {
+        int pageNo = (int)(id/PAGE_SIZE);
+        if(pageNo>=pages.size()) {
+            synchronized(pages) {
+                __unsynchronizedList.ensureCapacity(pageNo+1);
+                for(int i=pageNo-pages.size()+1; i>0; i--) {
+                    pages.add(new LazyFixedSizeArray(PAGE_SIZE));
+                }
+            }
+        }
+        
+        int offset = (int)(id%PAGE_SIZE);
+        LazyFixedSizeArray page = pages.get(pageNo);
+        page.set(offset,value);
+        searchIndex.put(value, id);
+    }
+
     public class RAMSetAppender implements Appender<E> {
 
         private final long indexForThisThread;
@@ -88,17 +113,19 @@ public class BigOrderedRAMSet<E> extends AbstractBigOrderedSet<E> {
 
         @Override
         public long append(E element) {
-            Object[] page = pages.get(pageNoForThisThread);
+            LazyFixedSizeArray page = pages.get(pageNoForThisThread);
             int indexWithinPage = (int) (indexForThisThread % PAGE_SIZE);
-            page[indexWithinPage] = element;
+            page.set(indexWithinPage,element);
             searchIndex.put(element, indexForThisThread);
 
             return indexForThisThread;
         }
 
         private void addPage() {
-            pageNo++;
-            pages.add(new Object[PAGE_SIZE]);
+            pageNo++; 
+            if(pages.size() <= pageNo) {
+                pages.add(new LazyFixedSizeArray(PAGE_SIZE));
+            }
         }
 
     }

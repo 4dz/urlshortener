@@ -1,9 +1,8 @@
 package com.perry.urlshortener.cluster;
 
 import com.perry.urlshortener.lifecycle.MutableScope;
-import com.perry.urlshortener.persistence.BigOrderedSet;
+import com.perry.urlshortener.persistence.MirroredSet;
 import com.perry.urlshortener.persistence.SetEntry;
-import com.perry.urlshortener.persistence.SetModificationListener;
 import com.perry.urlshortener.stub.Config;
 import com.perry.urlshortener.util.Utf8String;
 import org.jgroups.JChannel;
@@ -12,9 +11,6 @@ import org.jgroups.ReceiverAdapter;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.core.IsEqual.equalTo;
@@ -99,7 +95,7 @@ public class ClusterOnStartupTest {
         final SetEntry[] receiveBuffer = new SetEntry[] {null};
         ClusterOnStartup clusterStarter = new ClusterOnStartup() {
             @Override
-            protected ReceiverAdapter createReceiver() {
+            protected ReceiverAdapter createReceiver(MirroredSet<Utf8String> database) {
                 return new ReceiverAdapter() {
                     @Override
                     public void receive(Message msg) {
@@ -126,28 +122,4 @@ public class ClusterOnStartupTest {
         broadcastChannel.send(new Message(null,null,transmitted));
     }
 
-    public static class BigOrderedDummySet implements BigOrderedSet<Utf8String> {
-        private List<SetModificationListener<Utf8String>> listeners = new ArrayList<>();
-
-        @Override
-        public long add(Utf8String element) { return 0; }
-
-        @Override
-        public Utf8String get(long i) { return null; }
-
-        @Override
-        public Long find(Utf8String element) { return null; }
-
-        @Override
-        public void addSynchronizedListener(SetModificationListener<Utf8String> synchronizedListener) {
-            this.listeners.add(synchronizedListener);
-        }
-
-        @Override
-        public void close() {}
-        
-        public List<SetModificationListener<Utf8String>> getSynchronizedListeners() {
-            return listeners;
-        }
-    }
 }

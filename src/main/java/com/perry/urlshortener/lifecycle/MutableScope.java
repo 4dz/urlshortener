@@ -2,6 +2,7 @@ package com.perry.urlshortener.lifecycle;
 
 import com.perry.urlshortener.config.Configuration;
 import com.perry.urlshortener.persistence.BigOrderedSet;
+import com.perry.urlshortener.persistence.MirroredSet;
 import com.perry.urlshortener.service.ShortenerService;
 import com.perry.urlshortener.util.Utf8String;
 import org.jgroups.JChannel;
@@ -30,6 +31,16 @@ public class MutableScope implements Scope {
     @Override
     public BigOrderedSet<Utf8String> getDatabase() {
         return database;
+    }
+
+    @Override
+    public MirroredSet<Utf8String> getMirrorDatabase() {
+        if(database instanceof MirroredSet) {
+            @SuppressWarnings("unchecked") 
+            MirroredSet<Utf8String> mirror = (MirroredSet)database;
+            return mirror;
+        }
+        return null;
     }
 
     @Override

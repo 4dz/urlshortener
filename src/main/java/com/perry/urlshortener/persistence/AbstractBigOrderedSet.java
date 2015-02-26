@@ -3,7 +3,7 @@ package com.perry.urlshortener.persistence;
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class AbstractBigOrderedSet<E> implements BigOrderedSet<E> {
+public abstract class AbstractBigOrderedSet<E> implements BigOrderedSet<E>, MirroredSet<E> {
 
     private final List<SetModificationListener<E>> synchronizedListeners;
     private boolean closed = false;
@@ -27,9 +27,9 @@ public abstract class AbstractBigOrderedSet<E> implements BigOrderedSet<E> {
                 return indexOfElement;
             } else {
                 appender=getAppender();
-                
+                final SetEntry<E> entry = new SetEntry<>(appender.getIndex(), element);
                 for(SetModificationListener<E> listener : synchronizedListeners) {
-                    listener.add(new SetEntry<>(appender.getIndex(), element));
+                    listener.add(entry);
                 }
             }
 

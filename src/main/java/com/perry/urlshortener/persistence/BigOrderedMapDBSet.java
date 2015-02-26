@@ -70,6 +70,12 @@ public class BigOrderedMapDBSet<E> extends AbstractBigOrderedSet<E> {
         return new MapDbSetAppender();
     }
 
+    @Override
+    public void mirror(Long id, E value) {
+        urls.put(id, value);
+        db.commit();  //persist changes into disk
+    }
+
     public class MapDbSetAppender implements Appender<E> {
         private final long id;
         

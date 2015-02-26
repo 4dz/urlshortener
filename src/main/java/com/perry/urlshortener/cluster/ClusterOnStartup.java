@@ -2,6 +2,8 @@ package com.perry.urlshortener.cluster;
 
 import com.perry.urlshortener.lifecycle.MutableScope;
 import com.perry.urlshortener.lifecycle.OnStartup;
+import com.perry.urlshortener.persistence.MirroredSet;
+import com.perry.urlshortener.util.Utf8String;
 import org.jgroups.JChannel;
 import org.jgroups.ReceiverAdapter;
 
@@ -12,7 +14,7 @@ public class ClusterOnStartup implements OnStartup {
         // TODO this should be controlled by a flag and/or set in the java command line
         // which starts tomcat.
         System.setProperty("java.net.preferIPv4Stack","true");
-        ReceiverAdapter receiver = createReceiver();
+        ReceiverAdapter receiver = createReceiver(scope.getMirrorDatabase());
         try {
 
             JChannel channel = new JChannel();
@@ -30,7 +32,7 @@ public class ClusterOnStartup implements OnStartup {
         }
     }
 
-    protected ReceiverAdapter createReceiver() {
-        return new MessageReceiver();
+    protected ReceiverAdapter createReceiver(MirroredSet<Utf8String> database) {
+        return new MessageReceiver(database);
     }
 }

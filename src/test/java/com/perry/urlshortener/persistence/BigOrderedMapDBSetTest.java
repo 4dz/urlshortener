@@ -1,6 +1,7 @@
 package com.perry.urlshortener.persistence;
 
 import com.perry.urlshortener.util.Utf8String;
+import org.hamcrest.MatcherAssert;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -18,7 +19,7 @@ public class BigOrderedMapDBSetTest {
     @Rule
     public TemporaryFolder folder = new TemporaryFolder();
 
-    private BigOrderedSet<Utf8String> set;
+    private BigOrderedMapDBSet<Utf8String> set;
     private String dbFilename;
     @Before
     public void init() throws IOException {
@@ -41,7 +42,24 @@ public class BigOrderedMapDBSetTest {
         assertThat(persistedSet.get(0L), equalTo(entry1));
         assertThat(persistedSet.get(1L), equalTo(entry2));
     }
-    
+
+    @Test
+    public void shouldAddElementToSet_WhenMirroringClusteredDatabase_AndPageExists() {
+        set.mirror(777L, new Utf8String("HELLO"));
+        MatcherAssert.assertThat(set.get(777L), equalTo(new Utf8String("HELLO")));
+    }
+
+    @Test
+    public void shouldAddElementToSet_AfterMirroringClusteredDatabase_AndPageDoesNotExist() {
+        set.mirror(5L, new Utf8String("HELLO"));
+        MatcherAssert.assertThat(set.get(5L), equalTo(new Utf8String("HELLO")));
+    }
+
+    @Test
+    public void shouldAddElementToSet_AfterMirroringClusteredDatabase() {
+        set.mirror(5L, new Utf8String("HELLO"));
+        MatcherAssert.assertThat(set.add(new Utf8String("entry1")), equalTo(0L));
+    }
 
     @After
     public void finished() {
