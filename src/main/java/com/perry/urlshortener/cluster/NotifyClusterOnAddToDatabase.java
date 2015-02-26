@@ -21,7 +21,6 @@ public class NotifyClusterOnAddToDatabase implements SetModificationListener<Utf
             channel.send(message);
         } catch (Exception e) {
             // TODO when you cant send a message, continue...?
-            e.printStackTrace();
         }
     }
 

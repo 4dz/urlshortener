@@ -2,10 +2,13 @@ package com.perry.urlshortener.cluster;
 
 import com.perry.urlshortener.lifecycle.MutableScope;
 import com.perry.urlshortener.persistence.BigOrderedSet;
+import com.perry.urlshortener.persistence.SetEntry;
 import com.perry.urlshortener.persistence.SetModificationListener;
 import com.perry.urlshortener.stub.Config;
 import com.perry.urlshortener.util.Utf8String;
 import org.jgroups.JChannel;
+import org.jgroups.Message;
+import org.jgroups.ReceiverAdapter;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -26,7 +29,7 @@ public class ClusterOnStartupTest {
     public static ClusterOnStartup clusterStarter;
     public static String oldIP4Value;
     public static BigOrderedDummySet database;
-    
+
     private static final String IP4Key = "java.net.preferIPv4Stack";
     
     
@@ -54,7 +57,7 @@ public class ClusterOnStartupTest {
     @Test
     public void shouldJoinUrlShortenerCluster_WhenStarting() {
         JChannel channel = scope.getCluster();
-        assertThat(channel.getClusterName(), equalTo("urlshortener"));
+        assertThat(channel.getClusterName(), equalTo(ClusterOnStartup.CHANNEL_NAME));
     }
 
     @Test
@@ -73,6 +76,56 @@ public class ClusterOnStartupTest {
         assertThat(database.getSynchronizedListeners().get(0), instanceOf(NotifyClusterOnAddToDatabase.class));
     }
     
+    @Test
+    public void shouldReceiveMessages_WhenBroadcast() throws Exception {
+        
+        final SetEntry[] receiveBuffer = startReceiver();
+        SetEntry transmitted = new SetEntry<>(999, new Utf8String("Expected Message"));
+        transmit(transmitted);
+        SetEntry received = waitForMessage(receiveBuffer);
+
+        assertThat(received, equalTo(transmitted));
+    }
+
+    
+    private SetEntry waitForMessage(final SetEntry[] receiveBuffer) throws InterruptedException {
+        synchronized (receiveBuffer) { receiveBuffer.wait(1000); }
+
+        return receiveBuffer[0];
+    }
+
+    private SetEntry[] startReceiver() {
+        @SuppressWarnings(value = "unchecked")
+        final SetEntry[] receiveBuffer = new SetEntry[] {null};
+        ClusterOnStartup clusterStarter = new ClusterOnStartup() {
+            @Override
+            protected ReceiverAdapter createReceiver() {
+                return new ReceiverAdapter() {
+                    @Override
+                    public void receive(Message msg) {
+                        super.receive(msg);
+                        synchronized (receiveBuffer) {
+                            Object o = msg.getObject();
+                            if(o instanceof SetEntry) {
+                                receiveBuffer[0] = (SetEntry) o;
+                            }
+                            receiveBuffer.notifyAll();
+                        }
+                    }
+                };
+            }
+        };
+        clusterStarter.onStart(new MutableScope(new Config()));
+        
+        return receiveBuffer;
+    }
+
+    private void transmit(SetEntry transmitted) throws Exception {
+        JChannel broadcastChannel = new JChannel();
+        broadcastChannel.connect(ClusterOnStartup.CHANNEL_NAME);
+        broadcastChannel.send(new Message(null,null,transmitted));
+    }
+
     public static class BigOrderedDummySet implements BigOrderedSet<Utf8String> {
         private List<SetModificationListener<Utf8String>> listeners = new ArrayList<>();
 
