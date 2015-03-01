@@ -29,3 +29,4 @@ References
 ==========
  * http://devslovebacon.com/conferences/bacon-2014/talks/lessons-learned-building-distributed-systems-at-bitly
  * http://www.mapdb.org/ and https://github.com/jankotek/MapDB
+ * http://www.jgroups.org/ and https://github.com/belaban/JGroups
