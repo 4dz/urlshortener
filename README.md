@@ -53,6 +53,12 @@ Equally shortening a URL can return JSONP responses;
 
     myfunc({"url": "http://b.io/ashdk"});
 
+
+Future Improvements
+===================
+ * The service could be improved upon with support for whitelists.
+ * Cloudbase could be used as a database - this would likely be a more robust storage solution.
+
 References
 ==========
  * http://devslovebacon.com/conferences/bacon-2014/talks/lessons-learned-building-distributed-systems-at-bitly
