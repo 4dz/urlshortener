@@ -5,7 +5,7 @@ Simple, scalable, optionally replicated web service which can shorten and expand
 
 This project is primarily a thought exercise and a way of trying out a few different ideas.  It was built using TDD/BDD so should have good test coverage.  Particular attention has been paid to efficient use of RAM, and fast shortening/expansion of tokens.
 
-The shortener is a JSON web service, and does not have a pretty GUI for ordinary web users.  In a future iteration I may add a GUI.
+The URL shortener is a JSON web service, and does not have a pretty GUI for ordinary web users.  In a future iteration I may add a GUI.
 
 There are three 'databases' available:
 
