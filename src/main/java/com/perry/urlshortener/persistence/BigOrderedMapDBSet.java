@@ -9,8 +9,10 @@ import org.mapdb.Fun;
 
 import java.io.File;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.NavigableSet;
 import java.util.NoSuchElementException;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * Storage backed by http://mapdb.org
@@ -20,9 +22,9 @@ import java.util.NoSuchElementException;
  */
 public class BigOrderedMapDBSet<E> extends AbstractBigOrderedSet<E> {
 
-    private final BTreeMap<Long, E> urls;
+    private final Map<Long, E> urls;
     private final NavigableSet<Fun.Tuple2<E, Long>> searchIndex;
-    private final Atomic.Long counter;
+    private final Counter counter;
     private final DB db;
     
     public BigOrderedMapDBSet(String dbFilename) {
@@ -36,10 +38,15 @@ public class BigOrderedMapDBSet<E> extends AbstractBigOrderedSet<E> {
                 .cacheSoftRefEnable()
                 .closeOnJvmShutdown()
                 .make();
-
-        this.urls = db.getTreeMap("urls");
+        
+        BTreeMap<Long, E> urls = db.getTreeMap("urls");
         this.searchIndex = db.getTreeSet("searchIndex");
-        this.counter = db.getAtomicLong("counter");
+        this.counter = createCounter();
+        try {
+            this.urls = decorate(urls);
+        } catch(Exception ex) {
+            throw new RuntimeException("Unable to start MapDB", ex);
+        }
         
         // bind inverse mapping to primary map, so it is auto-updated
         Bind.mapInverse(urls, searchIndex);
@@ -47,6 +54,30 @@ public class BigOrderedMapDBSet<E> extends AbstractBigOrderedSet<E> {
         this.setSynchronizedListener(synchronizedListener);
     }
     
+    protected Map<Long, E> decorate(ConcurrentMap<Long, E> urls) throws Exception {
+        return urls;
+    }
+    
+    protected Counter createCounter() {
+        final Atomic.Long ref = db.getAtomicLong("counter");
+        return new Counter() {
+            @Override
+            public long get() {
+                return ref.get();
+            }
+
+            @Override
+            public long getAndIncrement() {
+                return ref.getAndIncrement();
+            }
+            
+            @Override
+            public void set(long value) {
+                ref.set(value);
+            }
+        };
+    }
+
     @Override
     public void doClose() {
         db.commit();  //persist changes into disk

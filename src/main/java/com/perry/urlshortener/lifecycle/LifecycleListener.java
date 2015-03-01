@@ -19,7 +19,7 @@ import java.util.List;
 @WebListener
 public class LifecycleListener implements ServletContextListener {
     
-    private static final Class<?>[] STARTUP = {DatabaseOnStartup.class, ClusterOnStartup.class, ShortenerServiceOnStartup.class};
+    private static final Class<?>[] STARTUP = {ClusterOnStartup.class, DatabaseOnStartup.class, ShortenerServiceOnStartup.class};
     private static final Class<?>[] STOP = {ClusterOnStop.class};
     public static final String SCOPE_ATTRIBUTE_NAME="com.perry.urlshortener.lifecycle.LifecycleListener.Scope";
     

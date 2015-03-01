@@ -96,14 +96,14 @@ public class BaseNTest {
         BaseN slow = new BaseN(LARGE_UNORDERED_ALPHABET);
         
         long start = System.nanoTime();
-        for(int i=0; i<2000000; i++) {
+        for(int i=0; i<5000000; i++) {
             fast.decode("bcr89xyAini");
         }
         long end = System.nanoTime();
         long fastDuration = end-start;
 
         start = System.nanoTime();
-        for(int i=0; i<2000000; i++) {
+        for(int i=0; i<5000000; i++) {
             slow.decode("bcr89xyAini");
         }
         end = System.nanoTime();

@@ -68,4 +68,5 @@
     <!--pbcast.STREAMING_STATE_TRANSFER /-->
     <pbcast.STATE_TRANSFER  />
     <!-- pbcast.FLUSH  /-->
+    <COUNTER bypass_bundling="true" timeout="5000"/>
 </config>
